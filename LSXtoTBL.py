@@ -36,71 +36,77 @@ class LSXconvert():
         construct = {'stats': {'@stat_object_definition_id': '', 'stat_objects': {'stat_object': []}}}
 
         root = self.data['save']['region']['node']['children']['node']
-        for x in root:
-            if isinstance(x, str):
+        for x in root: # loop every node in root
+            if isinstance(x, str): # root only contains 1 node
                 t = self.loop_elements(root)
-                construct['stats']['stat_objects']['stat_object'].append(t)
+                construct['stats']['stat_objects']['stat_object'].append({'@is_substat': 'false', 'fields': {'field': t}})
                 break
-            else:
+            else: # construct xml node
                 t = self.loop_elements(x)
-            construct['stats']['stat_objects']['stat_object'].append(t)
+            construct['stats']['stat_objects']['stat_object'].append({'@is_substat': 'false', 'fields': {'field': t}})
         return construct
 
+    # Loop all elements in node
     def loop_elements(self, elem):
-        t = {'@is_substat': 'false', 'fields': {'field': []}}
+        t = []
         for akey, aval in elem.items():
-            if akey == 'attribute':
+            if akey == 'attribute': # Add attribute to builder
                 for node in aval:
-                    t['fields']['field'].append(self.gen_dict(node))
-            elif akey == 'children':
+                    t.append(self.gen_dict(node))
+            elif akey == 'children': # Combine children and add to builder
                 builder = {}
-                for ax in aval['node']:
+                if isinstance(aval['node'], list): # 1 layer
+                    chk_node = aval['node']
+                else: # 2 layers
+                    chk_node = aval['node']['children']['node']
+
+                for ax in chk_node:
                     if builder.get(ax['@id'], None) is None:
                         builder[ax['@id']] = {'@name': ax['@id'], '@type': self.gen_dict_keytype(ax['@id']), '@value': f'{ax["attribute"]["@value"]}'}
                     else:
                         builder[ax['@id']]['@value'] = f'{builder[ax["@id"]]["@value"]};{ax["attribute"]["@value"]}'
                 for ax, bx in builder.items():
-                    t['fields']['field'].append(bx)
+                    t.append(bx)
         return t
 
     # Generate dict lsx node from xml node
     def gen_dict(self, node):
         try:
-            nodedict = {}
+            ndict = {}
 
             # Attach values to keys
             for key, val in node.items():
                 if key == '@id':
-                    nodedict['@name'] = val
+                    ndict['@name'] = val
                     continue
                 if key == '@type':
-                    nodedict[key] = self.gen_dict_keytype(val, nodedict.get('@name', None))
+                    ndict[key] = self.gen_dict_keytype(val, ndict.get('@name', None))
                     continue
-                if key == '@value' and nodedict.get('@type', None) == 'TranslatedStringTableFieldDefinition':
-                    nodedict['@handle'] = val
-                    nodedict['@version'] = '1'
+                if key == '@value' and ndict.get('@type', None) == 'TranslatedStringTableFieldDefinition':
+                    ndict['@handle'] = val
+                    ndict['@version'] = '1'
                     continue
 
                 # Enum specific fields
-                if nodedict.get('@type', None) == 'EnumerationTableFieldDefinition':
-                    nodedict['@version'] = '1'
-                    if nodedict.get('@name', None) == 'BodyType' or nodedict.get('@name', None) == 'DefaultForBodyType':
-                        nodedict['@enumeration_type_name'] = 'BodyType'
+                if ndict.get('@type', None) == 'EnumerationTableFieldDefinition':
+                    ndict['@version'] = '1'
+                    if ndict.get('@name', None) == 'BodyType' or ndict.get('@name', None) == 'DefaultForBodyType':
+                        ndict['@enumeration_type_name'] = 'BodyType'
                         if node['@value'] == '0':
-                            nodedict['@value'] = 'Male'
+                            ndict['@value'] = 'Male'
                         elif node['@value'] == '1':
-                            nodedict['@value'] = 'Female'
-                    if nodedict.get('@name', None) == 'SlotName':
-                        nodedict['@enumeration_type_name'] = 'CharacterCreatorSlotNames'
-                    if nodedict.get('@name', None) == 'BodyShape':
-                        nodedict['@enumeration_type_name'] = 'BodyShape'
+                            ndict['@value'] = 'Female'
+                    if ndict.get('@name', None) == 'SlotName':
+                        ndict['@enumeration_type_name'] = 'CharacterCreatorSlotNames'
+                    if ndict.get('@name', None) == 'BodyShape':
+                        ndict['@enumeration_type_name'] = 'BodyShape'
                         if node['@value'] == '0':
-                            nodedict['@value'] = 'Standard'
+                            ndict['@value'] = 'Standard'
                         elif node['@value'] == '1':
-                            nodedict['@value'] = 'Strong'
-                if nodedict.get(key, None) is None:
-                    nodedict[key] = val
-            return nodedict
+                            ndict['@value'] = 'Strong'
+                if ndict.get(key, None) is None:
+                    ndict[key] = val
+            return ndict
         except Exception as e:
             print(f'Exception: {e}; Ignored')
 
