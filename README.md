@@ -1,5 +1,6 @@
 # bg3-lsx2tbl-converter
-Convert LSX to TBL files
+Convert LSX to TBL files<br>
+For use when porting third party mods to the toolkit or when you lost your editor files.
 
 run ``pip install -r requirements.txt`` to install the required libraries.
 
