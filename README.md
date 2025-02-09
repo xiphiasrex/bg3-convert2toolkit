@@ -13,6 +13,6 @@ If you get an error when converting:<br>
 &emsp;The file format is either wrong or its a format I havent made compatible yet.<br>
 &emsp;Icon Atlases are not supported and will throw an error.<br>
 If you get an error after conversion inside the toolkit:<br>
-&emsp;Post your toolkit error so I can fix it, this means some entry used a different data type than the usual ones.
+&emsp;Post your toolkit error so I can fix it, this means some entry used a different data type than the usual or configured ones.
 
 You can also create merge requests to fix these issues or missing data types.
