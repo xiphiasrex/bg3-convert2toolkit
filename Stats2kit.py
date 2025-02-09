@@ -67,11 +67,11 @@ class StatsConvert():
 
     def gen_dict(self, data, i):
         try:
-            builder = {'@name': data[0], '@type': self.db['DataTypesStats'].get(data[0], ''), '@value': data[1]}
-            if self.db['DataTypesStats'].get(data[0], '') == '' and i != 3:
+            builder = {'@name': data[0], '@type': self.db['DataTypes'].get(data[0], ''), '@value': data[1]}
+            if self.db['DataTypes'].get(data[0], '') == '' and i != 3:
                 print(f'{Fore.YELLOW}Missing Pre-Configured Data Type: {data[0]}{Fore.WHITE}')
-            if self.db['DataTypesStats'].get(data[0], '') == "EnumerationListTableFieldDefinition":
-                builder['@enumeration_type_name'] = self.db['DataTypesStats']['EnumTypes'].get(data[0], data[0])
+            if self.db['DataTypes'].get(data[0], '') == "EnumerationListTableFieldDefinition":
+                builder['@enumeration_type_name'] = self.db['DataTypes']['EnumTypes'].get(data[0], data[0])
                 builder['@version'] = "1"
             return builder
         except Exception as e:

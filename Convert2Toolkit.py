@@ -8,8 +8,10 @@ import os
 from LSXtoTBL import LSXconvert
 from Stats2kit import StatsConvert
 
+exclusions = ['meta.lsx', 'CC_Icons.lsx']
+
 def ConvertDB(file, db, converter):
-	if os.path.basename(file) in db["$exclusions$"]:
+	if os.path.basename(file) in exclusions:
 		return
 	try:
 		fuuid = db.get(os.path.basename(file).split('.')[0].replace('Spell_', ''), None)
@@ -34,6 +36,6 @@ if __name__ == "__main__":
 		ConvertDB(file, db['LSX'], conv_lsx)
 
 	print('\nConverting Stats files:')
-	print(f'{Fore.YELLOW}Stats conversion not yet completely compatible.\nUncomment code block to enable anyways.{Fore.WHITE}')
-	# for file in Path('./convert/').rglob('*.txt'):
-	# 	ConvertDB(file, db['Stats'], conv_stats)
+	#print(f'{Fore.YELLOW}Stats conversion not yet completely compatible.\nUncomment code block to enable anyways.{Fore.WHITE}')
+	for file in Path('./convert/').rglob('*.txt'):
+		ConvertDB(file, db['Stats'], conv_stats)
