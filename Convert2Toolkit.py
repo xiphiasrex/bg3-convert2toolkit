@@ -27,6 +27,8 @@ if __name__ == "__main__":
 	conv_lsx = LSXconvert()
 	conv_stats = StatsConvert(db)
 
+	Path("./convert/").mkdir(parents=True, exist_ok=True)
+
 	print('Converting LSX files:')
 	for file in Path('./convert/').rglob('*.lsx'):
 		ConvertDB(file, db['LSX'], conv_lsx)
