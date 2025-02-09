@@ -1,13 +1,19 @@
 import xmltodict
 from pathlib import Path
+from colorama import Fore, Back, Style
+import colorama
 
 class LSXconvert():
     data = None
     file = None
+    uuid = None
 
     # Init
     def __init__(self):
         pass
+
+    def setUUID(self, uuid=None):
+        self.uuid = uuid
 
     # Main call convert function
     def convert(self, file):
@@ -33,7 +39,11 @@ class LSXconvert():
 
     # Convert function logic
     def convert_all(self):
-        construct = {'stats': {'@stat_object_definition_id': '', 'stat_objects': {'stat_object': []}}}
+        if self.uuid is None:
+            nodeUUID = ''
+        else:
+            nodeUUID = self.uuid
+        construct = {'stats': {'@stat_object_definition_id': nodeUUID, 'stat_objects': {'stat_object': []}}}
 
         root = self.data['save']['region']['node']['children']['node']
         for x in root: # loop every node in root
@@ -57,8 +67,10 @@ class LSXconvert():
                 builder = {}
                 if isinstance(aval['node'], list): # 1 layer
                     chk_node = aval['node']
-                else: # 2 layers
+                elif not aval['node'].get('children', None) is None: # 2 layers
                     chk_node = aval['node']['children']['node']
+                else: # 1 layer but only one node
+                    chk_node = [aval['node']]
 
                 for ax in chk_node:
                     if builder.get(ax['@id'], None) is None:
