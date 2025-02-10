@@ -2,15 +2,17 @@ import xmltodict
 from pathlib import Path
 from colorama import Fore, Back, Style
 import colorama
+import os
 
 class LSXconvert():
     data = None
     file = None
     uuid = None
+    db = None
 
     # Init
-    def __init__(self):
-        pass
+    def __init__(self, db=None):
+        self.db = db
 
     def setUUID(self, uuid=None):
         self.uuid = uuid
@@ -18,14 +20,15 @@ class LSXconvert():
     # Main call convert function
     def convert(self, file):
         self.file = file
-        ftype, ext = file.split('.')
+        if self.is_file_guid(os.path.basename(file).split(".")[0]):
+            raise Exception('Cannot convert to binary')
         self.readxml(file)
         self.writexml(self.convert_all())
     
     # Read data from xml file
     def readxml(self, file):
         self.file = file
-        with open(file, 'r') as f:
+        with open(file, 'r+b') as f:
             self.data = xmltodict.parse(f.read())
         return self.data
 
@@ -143,6 +146,11 @@ class LSXconvert():
         if val == 'uint8' or key == 'SlotName':
             return 'EnumerationTableFieldDefinition'
         return 'FixedStringTableFieldDefinition'
+
+    def is_file_guid(self, file):
+        if len(file) == 36 and file[8:9:] == "-" and file[13:14:] == "-" and file[18:19:] == "-" and file[23:24:] == "-":
+            return True
+        return False
 
 # Convert every lsx file in dir
 if __name__ == "__main__":

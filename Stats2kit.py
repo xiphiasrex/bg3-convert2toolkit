@@ -3,6 +3,7 @@ import random
 from pathlib import Path
 from colorama import Fore, Back, Style
 import colorama
+import os
 
 class StatsConvert():
     data = None
@@ -50,9 +51,10 @@ class StatsConvert():
             raw = line.split('"')[1::2]
             if line[:3:] == "new":
                 t.append({'@name': 'UUID', '@type': 'IdTableFieldDefinition', '@value': self.genUUID()})
+                t.append({'@name': 'Name', '@type': 'NameTableFieldDefinition', '@value': raw[0].replace(f'{os.path.basename(self.file).split(".")[0].replace("Spell_","")}_', '')})
                 continue
             if line[:5:] == "using":
-                t.append({'@name': 'Using', '@type': 'BaseClassTableFieldDefinition', '@value': raw[0]})
+                t.append({'@name': 'Using', '@type': 'BaseClassTableFieldDefinition', '@value': ''})
                 continue
             if line[:4:] == "data" and i != 3:
                 builder = self.gen_dict(raw, i)
@@ -60,17 +62,25 @@ class StatsConvert():
                     t.append(builder)
                 continue
             if line == '':
-                construct['stats']['stat_objects']['stat_object'].append({'@is_substat': 'false', 'fields': {'field': t}})
+                if not (not t):
+                    construct['stats']['stat_objects']['stat_object'].append({'@is_substat': 'false', 'fields': {'field': t}})
                 t = []
                 i = 0
         return construct
 
     def gen_dict(self, data, i):
         try:
-            builder = {'@name': data[0], '@type': self.db['DataTypes'].get(data[0], ''), '@value': data[1]}
+            builder = {'@name': data[0], '@type': self.db['DataTypes'].get(data[0], '')}
+            if self.db['DataTypes'].get(data[0], '') == "TranslatedStringTableFieldDefinition":
+                builder['@handle'] = data[1].split(";")[0]
+                builder['@version'] = "1"
+            else:
+                if data[1] == "":
+                    return None
+                builder['@value'] = data[1]
             if self.db['DataTypes'].get(data[0], '') == '' and i != 3:
                 print(f'{Fore.YELLOW}Missing Pre-Configured Data Type: {data[0]}{Fore.WHITE}')
-            if self.db['DataTypes'].get(data[0], '') == "EnumerationListTableFieldDefinition":
+            if self.db['DataTypes'].get(data[0], '') == "EnumerationListTableFieldDefinition" or self.db['DataTypes'].get(data[0], '') == "EnumerationTableFieldDefinition":
                 builder['@enumeration_type_name'] = self.db['DataTypes']['EnumTypes'].get(data[0], data[0])
                 builder['@version'] = "1"
             return builder
@@ -84,5 +94,5 @@ class StatsConvert():
             if i == 8 or i == 13 or i == 18 or i == 23:
                 uuid += "-"
             else:
-                uuid += random.choice("abcdefgh0123456789")
+                uuid += random.choice("abcdef0123456789")
         return uuid
