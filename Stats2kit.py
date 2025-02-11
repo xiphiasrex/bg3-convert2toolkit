@@ -89,7 +89,7 @@ class StatsConvert():
                     if construct['stats']['stat_objects']['stat_object'][i]['fields']['field'][y]['@value'] == '':
                         isRecovered = False
         if not isRecovered:
-            print(f'\t{Fore.YELLOW}Missing some Parent entries{Fore.WHITE}')
+            print(f'{Fore.YELLOW}Missing parent entries in: {os.path.basename(self.file)}{Fore.WHITE}')
         return construct
 
     # Generate xml object to construct entry data
