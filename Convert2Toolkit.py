@@ -7,6 +7,7 @@ import os
 
 from LSXtoTBL import LSXconvert
 from Stats2kit import StatsConvert
+from compiledb import CompileDB
 
 exclusions = ['meta.lsx', 'CC_Icons.lsx']
 
@@ -23,11 +24,27 @@ def ConvertDB(file, db, converter):
 
 # Convert any projects in convert folder
 if __name__ == "__main__":
+	# Load Settings
+	auxdb = None
+	try:
+		with open('settings.json', encoding="utf-8") as f:
+			settings = json.load(f)
+
+		# Check if bg3 path valid
+		if not Path(f"{settings.get('bg3path','')}/bin/bg3.exe").is_file():
+			raise Exception('')
+		print(f'{Fore.YELLOW}Path to bg3.exe found. Compiling auxiliary ID Database...{Fore.WHITE}')
+		compdb = CompileDB(settings.get('bg3path',''))
+		auxdb = compdb.compileAuxiliaryDB()
+	except Exception as e:
+		auxdb = None
+
+	# Load DB
 	with open('db.json', encoding="utf-8") as f:
 		db = json.load(f)
 
 	conv_lsx = LSXconvert()
-	conv_stats = StatsConvert(db)
+	conv_stats = StatsConvert(db, auxdb)
 
 	Path("./convert/").mkdir(parents=True, exist_ok=True)
 
@@ -36,6 +53,5 @@ if __name__ == "__main__":
 		ConvertDB(file, db['LSX'], conv_lsx)
 
 	print('\nConverting Stats files:')
-	#print(f'{Fore.YELLOW}Stats conversion not yet completely compatible.\nUncomment code block to enable anyways.{Fore.WHITE}')
 	for file in Path('./convert/').rglob('*.txt'):
 		ConvertDB(file, db['Stats'], conv_stats)

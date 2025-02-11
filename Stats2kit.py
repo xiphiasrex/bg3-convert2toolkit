@@ -10,10 +10,12 @@ class StatsConvert():
     file = None
     uuid = None
     db = None
+    auxdb = None
 
     # Init
-    def __init__(self, db=None):
+    def __init__(self, db=None, auxdb=None):
         self.db = db
+        self.auxdb = auxdb
 
     def setUUID(self, uuid=None):
         self.uuid = uuid
@@ -24,7 +26,6 @@ class StatsConvert():
         ftype, ext = file.split('.')
         with open(file) as f:
             self.data = f.read()
-        self.convert_all()
         self.writexml(self.convert_all())
 
     # Write data to xml file
@@ -41,37 +42,61 @@ class StatsConvert():
             nodeUUID = ''
         else:
             nodeUUID = self.uuid
+        if self.auxdb is None:
+            self.auxdb = {}
         construct = {'stats': {'@stat_object_definition_id': nodeUUID, 'stat_objects': {'stat_object': []}}}
 
         # Read line by line
         t = []
         i = 0
+        dupes = []
+        auxIDfix = {}
         for line in self.data.split("\n"):
             i += 1
             raw = line.split('"')[1::2]
-            if line[:3:] == "new":
-                t.append({'@name': 'UUID', '@type': 'IdTableFieldDefinition', '@value': self.genUUID()})
-                t.append({'@name': 'Name', '@type': 'NameTableFieldDefinition', '@value': raw[0].replace(f'{os.path.basename(self.file).split(".")[0].replace("Spell_","")}_', '')})
+            if len(raw) > 0: # Ignore duplicaten entries
+                if raw[0] in dupes:
+                    continue
+                dupes.append(raw[0])
+            if line[:3:] == "new": # Data definition entries
+                newUID = self.genUUID()
+                nameval = raw[0].replace(f'{os.path.basename(self.file).split(".")[0].replace("Spell_","")}_', '')
+                auxIDfix[nameval] = newUID
+                t.append({'@name': 'UUID', '@type': 'IdTableFieldDefinition', '@value': newUID})
+                t.append({'@name': 'Name', '@type': 'NameTableFieldDefinition', '@value': nameval})
                 continue
-            if line[:5:] == "using":
-                t.append({'@name': 'Using', '@type': 'BaseClassTableFieldDefinition', '@value': ''})
+            if line[:5:] == "using": # Skip parent if IDs not in aux db
+                t.append({'@name': 'Using', '@type': 'BaseClassTableFieldDefinition', '@value': self.auxdb.get(raw[0],raw[0])})
                 continue
-            if line[:4:] == "data" and i != 3:
+            if line[:4:] == "data" and i != 3: # Data entries
                 builder = self.gen_dict(raw, i)
                 if not builder is None:
                     t.append(builder)
                 continue
-            if line == '':
+            if line == '': # Data seperator
                 if not (not t):
                     construct['stats']['stat_objects']['stat_object'].append({'@is_substat': 'false', 'fields': {'field': t}})
                 t = []
                 i = 0
+                dupes = []
+
+        # Try fixing parent IDs
+        isRecovered = True
+        for i, x in enumerate(construct['stats']['stat_objects']['stat_object']):
+            for y, val in enumerate(x['fields']['field']):
+                if val['@name'] == 'Using' and not self.is_guid(val['@value']):
+                    construct['stats']['stat_objects']['stat_object'][i]['fields']['field'][y]['@value'] = auxIDfix.get(val['@value'],'')
+                    if construct['stats']['stat_objects']['stat_object'][i]['fields']['field'][y]['@value'] == '':
+                        isRecovered = False
+        if not isRecovered:
+            print(f'\t{Fore.YELLOW}Missing some Parent entries{Fore.WHITE}')
         return construct
 
+    # Generate xml object to construct entry data
     def gen_dict(self, data, i):
         try:
             builder = {'@name': data[0], '@type': self.db['DataTypes'].get(data[0], '')}
-            if self.db['DataTypes'].get(data[0], '') == "TranslatedStringTableFieldDefinition":
+            if self.db['DataTypes'].get(data[0], '') == "TranslatedStringTableFieldDefinition": # Translated entries
                 builder['@handle'] = data[1].split(";")[0]
                 builder['@version'] = "1"
             else:
@@ -96,3 +121,8 @@ class StatsConvert():
             else:
                 uuid += random.choice("abcdef0123456789")
         return uuid
+
+    def is_guid(self, val):
+        if len(val) == 36 and val[8:9:] == "-" and val[13:14:] == "-" and val[18:19:] == "-" and val[23:24:] == "-":
+            return True
+        return False
