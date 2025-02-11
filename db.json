@@ -276,7 +276,9 @@
             "IgnoreTeleport": "YesNo",
             "ThrowOrigin": "ThrowOrigin",
             "WeaponTypes": "WeaponType",
-            "SpellFlags": "SpellFlagList"
+            "SpellFlags": "SpellFlagList",
+            "RemoveEvents": "StatusEvent",
+            "Properties": "PassiveFlags"
         },
         "DisplayName": "TranslatedStringTableFieldDefinition",
         "MaterialPresetUUID": "GuidTableFieldDefinition",
