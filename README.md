@@ -9,6 +9,10 @@ You can also drop an entire project into it.
 
 run ``py Convert2Toolkit.py`` to start conversion.
 
+If you have missing ``Parent`` entries you can try adding your BG3 install path to ``settings.json`` as follows:<br>
+``C:/any/folder/until/Baldurs Gate 3/``<br>
+This will enable the converter to read all IDs from your BG3 installation and mods to try and recover them.
+
 If you get an error when converting:<br>
 &emsp;The file format is either wrong or its a format I havent made compatible yet.<br>
 &emsp;Icon Atlases are not supported and will throw an error.<br>
