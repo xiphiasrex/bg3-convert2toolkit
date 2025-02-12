@@ -278,7 +278,11 @@
             "WeaponTypes": "WeaponType",
             "SpellFlags": "SpellFlagList",
             "RemoveEvents": "StatusEvent",
-            "Properties": "PassiveFlags"
+            "Properties": "PassiveFlags",
+            "StatusGroups": "StatusGroupFlags",
+            "BoostContext": "StatsFunctorContext",
+            "EnabledContext": "StatsFunctorContext",
+            "ToggleOffContext": "StatsFunctorContext"
         },
         "DisplayName": "TranslatedStringTableFieldDefinition",
         "MaterialPresetUUID": "GuidTableFieldDefinition",
