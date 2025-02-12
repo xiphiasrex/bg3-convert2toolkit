@@ -282,7 +282,8 @@
             "StatusGroups": "StatusGroupFlags",
             "BoostContext": "StatsFunctorContext",
             "EnabledContext": "StatsFunctorContext",
-            "ToggleOffContext": "StatsFunctorContext"
+            "ToggleOffContext": "StatsFunctorContext",
+            "RequirementEvents": "StatusEvent"
         },
         "DisplayName": "TranslatedStringTableFieldDefinition",
         "MaterialPresetUUID": "GuidTableFieldDefinition",

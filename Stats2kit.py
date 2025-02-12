@@ -23,7 +23,6 @@ class StatsConvert():
     # Main call convert function
     def convert(self, file):
         self.file = file
-        ftype, ext = file.split('.')
         with open(file) as f:
             self.data = f.read()
         self.writexml(self.convert_all())
@@ -61,14 +60,20 @@ class StatsConvert():
             if line[:3:] == "new": # Data definition entries
                 newUID = self.genUUID()
                 nameval = raw[0].replace(f'{os.path.basename(self.file).split(".")[0].replace("Spell_","")}_', '')
-                auxIDfix[nameval] = newUID
+
+                fname, fext = os.path.splitext(os.path.basename(self.file).replace("Spell_",""))
+                if fname == "Projectile" or fname == "Target" or fname == "Zone" or fname == "Shout" or fname == "ProjectileStrike" or fname == "Rush" or fname == "Teleportation" or fname == "Throw":
+                    auxIDfix[f'{fname}_{nameval}'] = newUID
+                else:
+                    auxIDfix[nameval] = newUID
+                
                 t.append({'@name': 'UUID', '@type': 'IdTableFieldDefinition', '@value': newUID})
                 t.append({'@name': 'Name', '@type': 'NameTableFieldDefinition', '@value': nameval})
                 continue
             if line[:5:] == "using": # Skip parent if IDs not in aux db
                 t.append({'@name': 'Using', '@type': 'BaseClassTableFieldDefinition', '@value': self.auxdb.get(raw[0],raw[0])})
                 continue
-            if line[:4:] == "data" and i != 3: # Data entries
+            if line[:4:] == "data": # Data entries
                 builder = self.gen_dict(raw, i)
                 if not builder is None:
                     t.append(builder)
