@@ -35,7 +35,12 @@ if __name__ == "__main__":
 			raise Exception('')
 		print(f'{Fore.YELLOW}Path to bg3.exe found. Compiling auxiliary ID Database...{Fore.WHITE}')
 		compdb = CompileDB(settings.get('bg3path',''))
-		auxdb = compdb.compileAuxiliaryDB()
+
+		if settings.get('compileAux',1):
+			auxdb = compdb.compileAuxiliaryDB()
+		else:
+			with open('auxdb.json', encoding="utf-8") as f:
+				auxdb = json.load(f)
 	except Exception as e:
 		auxdb = None
 
