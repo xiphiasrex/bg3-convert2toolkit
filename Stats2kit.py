@@ -23,7 +23,7 @@ class StatsConvert():
     # Main call convert function
     def convert(self, file):
         self.file = file
-        with open(file) as f:
+        with open(file, encoding="utf-8-sig") as f:
             self.data = f.read()
         self.writexml(self.convert_all())
 
