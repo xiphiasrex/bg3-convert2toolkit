@@ -10,6 +10,8 @@ class LSXconvert():
     uuid = None
     db = None
 
+    lastName = ''
+
     # Init
     def __init__(self, db=None):
         self.db = db
@@ -64,6 +66,7 @@ class LSXconvert():
         t = []
         for akey, aval in elem.items():
             t = self.loop_builder(t, akey, aval)
+        t.append({'@name':'NameFS','@type':'FixedStringTableFieldDefinition','@value':self.lastName})
         return t
 
     def loop_builder(self, t, akey, aval, lnode=None):
@@ -79,7 +82,7 @@ class LSXconvert():
                     for ax in xval:
                         ax['@id'] = aval['node'].get('@id', None)
                         if builder.get(ax['@id'], None) is None:
-                            builder[ax['@id']] = {'@name': ax['@id'], '@type': self.gen_dict_keytype(ax['@id'], ax['@id']), '@value': f'{ax["attribute"]["@value"]}'}
+                            builder[ax['@id']] = {'@name': ax['@id'], '@type': self.gen_dict_keytype(ax['@id']), '@value': f'{ax["attribute"]["@value"]}'}
                         else:
                             builder[ax['@id']]['@value'] = f'{builder[ax["@id"]]["@value"]};{ax["attribute"]["@value"]}'
                     for ax, bx in builder.items():
@@ -108,7 +111,7 @@ class LSXconvert():
                     ndict['@name'] = val
                     continue
                 if key == '@type':
-                    ndict[key] = self.gen_dict_keytype(val, ndict.get('@name', None))
+                    ndict[key] = self.gen_dict_keytype(ndict.get('@name', None))
                     continue
                 if key == '@value' and ndict.get('@type', None) == 'TranslatedStringTableFieldDefinition':
                     ndict['@handle'] = val
@@ -116,34 +119,28 @@ class LSXconvert():
                     continue
 
                 # Enum specific fields
-                # TODO: Try making dynamic
-                if ndict.get('@type', None) == 'EnumerationTableFieldDefinition':
+                if ndict.get('@type', None) == 'EnumerationTableFieldDefinition' or ndict.get('@type', None) == 'EnumerationListTableFieldDefinition':
                     ndict['@version'] = '1'
-                    if ndict.get('@name', None) == 'BodyType' or ndict.get('@name', None) == 'DefaultForBodyType':
-                        ndict['@enumeration_type_name'] = 'BodyType'
-                        if node['@value'] == '0':
-                            ndict['@value'] = 'Male'
-                        elif node['@value'] == '1':
-                            ndict['@value'] = 'Female'
-                    if ndict.get('@name', None) == 'SlotName':
-                        ndict['@enumeration_type_name'] = 'CharacterCreatorSlotNames'
-                    if ndict.get('@name', None) == 'BodyShape':
-                        ndict['@enumeration_type_name'] = 'BodyShape'
-                        if node['@value'] == '0':
-                            ndict['@value'] = 'Standard'
-                        elif node['@value'] == '1':
-                            ndict['@value'] = 'Strong'
+                    ndict['@enumeration_type_name'] = self.db['DataTypes']['EnumTypes'].get(ndict.get('@name', None), ndict.get('@name', None))
+                    val = self.db['DataTypes']['EnumSubTypes'].get(ndict.get('@name', None), {})
+                    if isinstance(val, dict):
+                        ndict['@value'] = val.get(node['@value'], node['@value'])
+                    else:
+                        ndict['@value'] = node['@value']
 
                 if ndict.get(key, None) is None:
+                    if key == '@value' and ndict['@name'] == 'Name':
+                        self.lastName = val
                     ndict[key] = val
             return ndict
         except Exception as e:
             print(f'Exception: {e}; Ignored')
 
     # Translate lsx node type to tbl type
-    def gen_dict_keytype(self, val, key = None):
+    def gen_dict_keytype(self, key = None):
+        fname, fext = os.path.splitext(os.path.basename(self.file))
         dtype = self.db['DataTypes'].get(key, '')
-        if dtype == 'IntegerTableFieldDefinition':
+        if dtype == 'IntegerTableFieldDefinition' and fname == 'Progressions':
             dtype = 'ByteTableFieldDefinition'
         return dtype
 
@@ -152,6 +149,13 @@ class LSXconvert():
         if len(file) == 36 and file[8:9:] == "-" and file[13:14:] == "-" and file[18:19:] == "-" and file[23:24:] == "-":
             return True
         return False
+
+    # Safe list get without crash
+    def list_get(self, l, idx, default):
+        try:
+            return l[idx]
+        except IndexError:
+            return default
 
 # Convert every lsx file in dir
 if __name__ == "__main__":
