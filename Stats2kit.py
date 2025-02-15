@@ -99,18 +99,29 @@ class StatsConvert():
 
     # Generate xml object to construct entry data
     def gen_dict(self, data, i):
+        fname, fext = os.path.splitext(os.path.basename(self.file).replace("Spell_",""))
         try:
-            builder = {'@name': data[0], '@type': self.db['DataTypes'].get(data[0], '')}
+            builder = {'@name': data[0], '@type': self.db['DataTypes'].get(data[0], ''), '@value':''}
+            if fname == 'Interrupt': # Hardcoded Properties checks
+                if data[0] == 'Properties':
+                    builder['@type'] = 'StringTableFieldDefinition'
+                if data[0] == 'EnableContext':
+                    data[0] = 'EnabledContext'
+                    builder['@name'] = data[0]
+                if data[0] == 'EnableCondition':
+                    data[0] = 'EnabledConditions'
+                    builder['@name'] = data[0]
             if self.db['DataTypes'].get(data[0], '') == "TranslatedStringTableFieldDefinition": # Translated entries
                 builder['@handle'] = data[1].split(";")[0]
                 builder['@version'] = "1"
-            else:
+            else: # All normal entries
                 if data[1] == "":
                     return None
-                builder['@value'] = data[1]
-            if self.db['DataTypes'].get(data[0], '') == '' and i != 3:
+                if builder['@value'] == '':
+                    builder['@value'] = data[1]
+            if self.db['DataTypes'].get(data[0], '') == '' and i != 3: # i = 3; ignore types
                 print(f'{Fore.YELLOW}Missing Pre-Configured Data Type: {data[0]}{Fore.WHITE}')
-            if self.db['DataTypes'].get(data[0], '') == "EnumerationListTableFieldDefinition" or self.db['DataTypes'].get(data[0], '') == "EnumerationTableFieldDefinition":
+            if self.db['DataTypes'].get(data[0], '') == "EnumerationListTableFieldDefinition" or self.db['DataTypes'].get(data[0], '') == "EnumerationTableFieldDefinition": # Enum types
                 builder['@enumeration_type_name'] = self.db['DataTypes']['EnumTypes'].get(data[0], data[0])
                 builder['@version'] = "1"
             return builder

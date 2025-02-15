@@ -63,25 +63,38 @@ class LSXconvert():
     def loop_elements(self, elem):
         t = []
         for akey, aval in elem.items():
-            if akey == 'attribute': # Add attribute to builder
-                for node in aval:
-                    t.append(self.gen_dict(node))
-            elif akey == 'children': # Combine children and add to builder
-                builder = {}
-                if isinstance(aval['node'], list): # 1 layer
-                    chk_node = aval['node']
-                elif not aval['node'].get('children', None) is None: # 2 layers
-                    chk_node = aval['node']['children']['node']
-                else: # 1 layer but only one node
-                    chk_node = [aval['node']]
+            t = self.loop_builder(t, akey, aval)
+        return t
 
-                for ax in chk_node:
-                    if builder.get(ax['@id'], None) is None:
-                        builder[ax['@id']] = {'@name': ax['@id'], '@type': self.gen_dict_keytype(ax['@id']), '@value': f'{ax["attribute"]["@value"]}'}
-                    else:
-                        builder[ax['@id']]['@value'] = f'{builder[ax["@id"]]["@value"]};{ax["attribute"]["@value"]}'
-                for ax, bx in builder.items():
-                    t.append(bx)
+    def loop_builder(self, t, akey, aval, lnode=None):
+        if akey == 'attribute': # Add attribute to builder
+            for node in aval:
+                t.append(self.gen_dict(node))
+        elif akey == 'children': # Combine children and add to builder
+            builder = {}
+            if isinstance(aval['node'], list): # 1 layer
+                chk_node = aval['node']
+            elif not aval['node'].get('children', None) is None: # Multilayer
+                for xkey, xval in aval['node']['children'].items():
+                    for ax in xval:
+                        ax['@id'] = aval['node'].get('@id', None)
+                        if builder.get(ax['@id'], None) is None:
+                            builder[ax['@id']] = {'@name': ax['@id'], '@type': self.gen_dict_keytype(ax['@id'], ax['@id']), '@value': f'{ax["attribute"]["@value"]}'}
+                        else:
+                            builder[ax['@id']]['@value'] = f'{builder[ax["@id"]]["@value"]};{ax["attribute"]["@value"]}'
+                    for ax, bx in builder.items():
+                        t.append(bx)
+                return t
+            else: # 1 layer but only one node
+                chk_node = [aval['node']]
+
+            for ax in chk_node:
+                if builder.get(ax['@id'], None) is None:
+                    builder[ax['@id']] = {'@name': ax['@id'], '@type': self.gen_dict_keytype(ax['@id']), '@value': f'{ax["attribute"]["@value"]}'}
+                else:
+                    builder[ax['@id']]['@value'] = f'{builder[ax["@id"]]["@value"]};{ax["attribute"]["@value"]}'
+            for ax, bx in builder.items():
+                t.append(bx)
         return t
 
     # Generate dict lsx node from xml node
@@ -103,6 +116,7 @@ class LSXconvert():
                     continue
 
                 # Enum specific fields
+                # TODO: Try making dynamic
                 if ndict.get('@type', None) == 'EnumerationTableFieldDefinition':
                     ndict['@version'] = '1'
                     if ndict.get('@name', None) == 'BodyType' or ndict.get('@name', None) == 'DefaultForBodyType':
@@ -119,6 +133,7 @@ class LSXconvert():
                             ndict['@value'] = 'Standard'
                         elif node['@value'] == '1':
                             ndict['@value'] = 'Strong'
+
                 if ndict.get(key, None) is None:
                     ndict[key] = val
             return ndict
@@ -127,26 +142,12 @@ class LSXconvert():
 
     # Translate lsx node type to tbl type
     def gen_dict_keytype(self, val, key = None):
-        if (key == 'Description' or key == 'DisplayName') and (val == 'TranslatedString' or val == 'FixedString'):
-            return 'TranslatedStringTableFieldDefinition'
-        if key == 'Name' and val == 'FixedString':
-            return 'NameTableFieldDefinition'
-        if val == 'LSString':
-            return 'ColorTableFieldDefinition'
-        if val == 'TranslatedString':
-            return 'TranslatedStringTableFieldDefinition'
-        if val == 'guid' and key == 'UUID':
-            return 'IdTableFieldDefinition'
-        if val == 'guid':
-            return 'GuidTableFieldDefinition'
-        if val == 'LSString':
-            return 'ColorTableFieldDefinition'
-        if val == 'Tags' or val == 'Gods' or val == 'ExcludedGods' or val == 'HairColors' or val == 'HairHighlightColors' or val == 'HairGrayingColors' or val == 'SkinColors' or val == 'EyeColors' or val == 'TattooColors' or val == 'MakeupColors' or val == 'MergedInto':
-            return 'GuidObjectListTableFieldDefinition'
-        if val == 'uint8' or key == 'SlotName':
-            return 'EnumerationTableFieldDefinition'
-        return 'FixedStringTableFieldDefinition'
+        dtype = self.db['DataTypes'].get(key, '')
+        if dtype == 'IntegerTableFieldDefinition':
+            dtype = 'ByteTableFieldDefinition'
+        return dtype
 
+    # Check if name or file is of guid type
     def is_file_guid(self, file):
         if len(file) == 36 and file[8:9:] == "-" and file[13:14:] == "-" and file[18:19:] == "-" and file[23:24:] == "-":
             return True

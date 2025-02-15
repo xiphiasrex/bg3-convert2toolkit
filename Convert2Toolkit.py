@@ -48,7 +48,7 @@ if __name__ == "__main__":
 	with open('db.json', encoding="utf-8") as f:
 		db = json.load(f)
 
-	conv_lsx = LSXconvert()
+	conv_lsx = LSXconvert(db)
 	conv_stats = StatsConvert(db, auxdb)
 
 	Path("./convert/").mkdir(parents=True, exist_ok=True)
