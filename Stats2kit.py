@@ -94,7 +94,9 @@ class StatsConvert():
                     if construct['stats']['stat_objects']['stat_object'][i]['fields']['field'][y]['@value'] == '':
                         isRecovered = False
         if not isRecovered:
-            print(f'{Fore.YELLOW}Missing parent entries in: {os.path.basename(self.file)}{Fore.WHITE}')
+            print(f'{Fore.YELLOW}[stats] Missing parent entries in: {os.path.basename(self.file)}{Fore.WHITE}')
+        with open('auxdb_self_recovered.temp', 'w') as f:
+            f.write(json.dumps(auxIDfix, indent=4))
         return construct
 
     # Generate xml object to construct entry data
@@ -120,13 +122,13 @@ class StatsConvert():
                 if builder['@value'] == '':
                     builder['@value'] = data[1]
             if self.db['DataTypes'].get(data[0], '') == '' and i != 3: # i = 3; ignore types
-                print(f'{Fore.YELLOW}Missing Pre-Configured Data Type: {data[0]}{Fore.WHITE}')
+                print(f'{Fore.YELLOW}[stats] Missing Pre-Configured Data Type: {data[0]}{Fore.WHITE}')
             if self.db['DataTypes'].get(data[0], '') == "EnumerationListTableFieldDefinition" or self.db['DataTypes'].get(data[0], '') == "EnumerationTableFieldDefinition": # Enum types
                 builder['@enumeration_type_name'] = self.db['DataTypes']['EnumTypes'].get(data[0], data[0])
                 builder['@version'] = "1"
             return builder
         except Exception as e:
-            print(f'Exception: {e}; Ignored')
+            print(f'[stats] Exception: {e}; Ignored')
             return None
 
     def genUUID(self):

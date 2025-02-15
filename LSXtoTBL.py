@@ -2,6 +2,7 @@ import xmltodict
 from pathlib import Path
 from colorama import Fore, Back, Style
 import colorama
+import json
 import os
 
 class LSXconvert():
@@ -9,6 +10,10 @@ class LSXconvert():
     file = None
     uuid = None
     db = None
+    auxIDfix = None
+
+    with open('db.json', encoding="utf-8") as f:
+        backup_db = json.load(f)
 
     lastName = ''
 
@@ -47,8 +52,18 @@ class LSXconvert():
         if self.uuid is None:
             nodeUUID = ''
         else:
-            nodeUUID = self.uuid
+            #nodeUUID = self.uuid
+            nodeUUID = self.db['LSX'].get(self.data['save']['region'].get('@id', None), self.uuid)
+            if nodeUUID != self.uuid:
+                print(f"{Fore.YELLOW}[lsx] ID Override for {os.path.basename(self.file)}: {nodeUUID} ({self.data['save']['region'].get('@id', None)}){Fore.WHITE}")
+
         construct = {'stats': {'@stat_object_definition_id': nodeUUID, 'stat_objects': {'stat_object': []}}}
+
+        try:
+            with open('auxdb_self_recovered.temp', encoding="utf-8") as f:
+                self.auxIDfix = json.load(f)
+        except Exception as e:
+            self.auxIDfix = {}
 
         root = self.data['save']['region']['node']['children']['node']
         for x in root: # loop every node in root
@@ -102,16 +117,30 @@ class LSXconvert():
 
     # Generate dict lsx node from xml node
     def gen_dict(self, node):
+        fname, fext = os.path.splitext(os.path.basename(self.file))
         try:
             ndict = {}
 
             # Attach values to keys
             for key, val in node.items():
                 if key == '@id':
+                    # Hardcoded lsx name fixes
+                    if (fname == 'Spells' or fname == 'Abilities' or fname == 'Passives' or fname == 'Skills'):
+                        if val == 'TableUUID':
+                            val = 'ProgressionUUID'
+                        if val == 'OriginUUID':
+                            val = 'Origin'
+                        if val == 'TableUUID':
+                            val = 'ProgressionUUID'
+                        if val == 'TableUUID':
+                            val = 'ProgressionUUID'
+                        if val == 'Add' and fname != 'Spells':
+                            val = 'DefaultValues'
+
                     ndict['@name'] = val
                     continue
                 if key == '@type':
-                    ndict[key] = self.gen_dict_keytype(ndict.get('@name', None))
+                    ndict[key] = self.gen_dict_keytype(ndict.get('@name', None), ndict.get('@name', None))
                     continue
                 if key == '@value' and ndict.get('@type', None) == 'TranslatedStringTableFieldDefinition':
                     ndict['@handle'] = val
@@ -134,14 +163,20 @@ class LSXconvert():
                     ndict[key] = val
             return ndict
         except Exception as e:
-            print(f'Exception: {e}; Ignored')
+            print(f'[lsx] Exception: {e}; Ignored')
 
     # Translate lsx node type to tbl type
-    def gen_dict_keytype(self, key = None):
+    def gen_dict_keytype(self, key = None, val = None):
         fname, fext = os.path.splitext(os.path.basename(self.file))
         dtype = self.db['DataTypes'].get(key, '')
+
+        # Hardcoded lsx type fixes
         if dtype == 'IntegerTableFieldDefinition' and fname == 'Progressions':
             dtype = 'ByteTableFieldDefinition'
+        if fname == 'ProgressionDescriptions' and val == 'Type':
+            dtype = 'FixedStringTableFieldDefinition'
+        if (fname == 'Spells' or fname == 'Abilities' or fname == 'Passives' or fname == 'Skills') and val == 'SelectorId':
+            dtype = 'StringTableFieldDefinition'
         return dtype
 
     # Check if name or file is of guid type
