@@ -49,11 +49,12 @@ class LSXconvert():
 
     # Convert function logic
     def convert_all(self):
+        fname, fext = os.path.splitext(os.path.basename(self.file))
+        self.ftype = self.data['save']['region'].get('@id', fname)
         if self.uuid is None:
             nodeUUID = ''
         else:
-            #nodeUUID = self.uuid
-            nodeUUID = self.db['LSX'].get(self.data['save']['region'].get('@id', None), self.uuid)
+            nodeUUID = self.db['LSX'].get(self.ftype, self.uuid)
             if nodeUUID != self.uuid:
                 print(f"{Fore.YELLOW}[lsx] ID Override for {os.path.basename(self.file)}: {nodeUUID} ({self.data['save']['region'].get('@id', None)}){Fore.WHITE}")
 
@@ -125,7 +126,7 @@ class LSXconvert():
             for key, val in node.items():
                 if key == '@id':
                     # Hardcoded lsx name fixes
-                    if (fname == 'Spells' or fname == 'Abilities' or fname == 'Passives' or fname == 'Skills'):
+                    if (self.ftype == 'DefaultValues'):
                         if val == 'TableUUID':
                             val = 'ProgressionUUID'
                         if val == 'OriginUUID':
@@ -136,6 +137,8 @@ class LSXconvert():
                             val = 'ProgressionUUID'
                         if val == 'Add' and fname != 'Spells':
                             val = 'DefaultValues'
+                    if fname == 'ClassDescriptions' and val == 'ParentGuid':
+                        val = 'ParentUUID'
 
                     ndict['@name'] = val
                     continue

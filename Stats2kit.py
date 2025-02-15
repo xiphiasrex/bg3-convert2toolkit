@@ -3,6 +3,7 @@ import random
 from pathlib import Path
 from colorama import Fore, Back, Style
 import colorama
+import json
 import os
 
 class StatsConvert():

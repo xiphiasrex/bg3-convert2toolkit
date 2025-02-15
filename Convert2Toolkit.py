@@ -8,6 +8,7 @@ import os
 from LSXtoTBL import LSXconvert
 from Stats2kit import StatsConvert
 from compiledb import CompileDB
+from fixlocale import FixLocale
 
 exclusions = ['meta.lsx', 'CC_Icons.lsx']
 
@@ -51,13 +52,23 @@ if __name__ == "__main__":
 
 	conv_lsx = LSXconvert(db)
 	conv_stats = StatsConvert(db, auxdb)
+	fix_locale = FixLocale()
 
 	Path("./convert/").mkdir(parents=True, exist_ok=True)
 
+	# Convert Stats
 	print(f'{Fore.CYAN}[main] Converting Stats files:{Fore.WHITE}')
 	for file in Path('./convert/').rglob('*.txt'):
 		ConvertDB(file, db['Stats'], conv_stats)
 
+	# Convert LSX
 	print(f'\n{Fore.CYAN}[main] Converting LSX files:{Fore.WHITE}')
 	for file in Path('./convert/').rglob('*.lsx'):
 		ConvertDB(file, db['LSX'], conv_lsx)
+
+	# Fix locales
+	print('')
+	for file in Path('./convert/').rglob('*.xml'):
+		if os.path.basename(file)[-8::] == '_fix.xml':
+			continue
+		fix_locale.fix(file, conv_lsx)
