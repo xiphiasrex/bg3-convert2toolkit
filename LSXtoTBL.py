@@ -83,6 +83,7 @@ class LSXconvert():
         for akey, aval in elem.items():
             t = self.loop_builder(t, akey, aval)
         t.append({'@name':'NameFS','@type':'FixedStringTableFieldDefinition','@value':self.lastName})
+        self.lastName = ''
         return t
 
     def loop_builder(self, t, akey, aval, lnode=None):
@@ -126,7 +127,7 @@ class LSXconvert():
             for key, val in node.items():
                 if key == '@id':
                     # Hardcoded lsx name fixes
-                    if (self.ftype == 'DefaultValues'):
+                    if self.ftype == 'DefaultValues':
                         if val == 'TableUUID':
                             val = 'ProgressionUUID'
                         if val == 'OriginUUID':
@@ -180,6 +181,16 @@ class LSXconvert():
             dtype = 'FixedStringTableFieldDefinition'
         if (fname == 'Spells' or fname == 'Abilities' or fname == 'Passives' or fname == 'Skills') and val == 'SelectorId':
             dtype = 'StringTableFieldDefinition'
+        if self.ftype == 'CompanionPresets' and key == 'RootTemplate':
+            dtype = 'GuidTableFieldDefinition'
+        if self.ftype == 'Origins':
+            if key == 'ClassUUID':
+                dtype = 'GuidTableFieldDefinition'
+            if key == 'Unique':
+                dtype = 'BoolTableFieldDefinition'
+        if self.ftype == 'Rulebook' and key == 'Weight':
+            dtype = 'ModifierTableFieldDefinition'
+
         return dtype
 
     # Check if name or file is of guid type
