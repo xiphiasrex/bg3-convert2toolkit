@@ -2,7 +2,7 @@ import xmltodict
 from pathlib import Path
 from colorama import Fore, Back, Style
 import colorama
-import json
+import json, random
 import os
 
 class LSXconvert():
@@ -28,9 +28,11 @@ class LSXconvert():
     def convert(self, file):
         self.file = file
         if self.is_file_guid(os.path.basename(file).split(".")[0]):
-            raise Exception('Cannot convert to binary')
+            #raise Exception('Cannot convert to binary')
+            print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(self.file)} (Reason: Cannot convert binary){Fore.WHITE}')
+            return False
         self.readxml(file)
-        self.writexml(self.convert_all())
+        return self.writexml(self.convert_all())
     
     # Read data from xml file
     def readxml(self, file):
@@ -43,14 +45,25 @@ class LSXconvert():
     def writexml(self, data, file = None):
         if file is None:
             file = self.file
+        if data is None:
+            return False
         out = file.replace('.lsx', '.tbl')
         with open(out, 'w') as f:
             f.write(xmltodict.unparse(data, pretty=True, indent='  '))
+        return True
 
     # Convert function logic
     def convert_all(self):
         fname, fext = os.path.splitext(os.path.basename(self.file))
-        self.ftype = self.data['save']['region'].get('@id', fname)
+
+        if isinstance(self.data['save']['region'], list):
+            self.ftype = self.data['save']['region'][0].get('@id', fname)
+        else:
+            self.ftype = self.data['save']['region'].get('@id', fname)
+        if self.ftype == 'IconUVList' or self.ftype == 'TextureAtlasInfo':
+            print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(self.file)} (Reason: Atlas doesnt need conversion){Fore.WHITE}')
+            return None
+
         if self.uuid is None:
             nodeUUID = ''
         else:
@@ -82,7 +95,13 @@ class LSXconvert():
         t = []
         for akey, aval in elem.items():
             t = self.loop_builder(t, akey, aval)
-        t.append({'@name':'NameFS','@type':'FixedStringTableFieldDefinition','@value':self.lastName})
+
+        if self.lastName == '':
+            self.lastName = self.genUUID()
+        if not self.nodeHasEntry(t, 'NameFS'):
+            t.append({'@name':'NameFS','@type':'FixedStringTableFieldDefinition','@value':self.lastName})
+        if not self.nodeHasEntry(t, 'Name'):
+            t.append({'@name':'Name','@type':'NameTableFieldDefinition','@value':self.lastName})
         self.lastName = ''
         return t
 
@@ -109,6 +128,9 @@ class LSXconvert():
                 chk_node = [aval['node']]
 
             for ax in chk_node:
+                if not ax.get('children', None) is None:
+                    t = self.loop_builder(t, ax['@id'], 'children', ax['children'])
+                    continue
                 if builder.get(ax['@id'], None) is None:
                     builder[ax['@id']] = {'@name': ax['@id'], '@type': self.gen_dict_keytype(ax['@id']), '@value': f'{ax["attribute"]["@value"]}'}
                 else:
@@ -179,8 +201,11 @@ class LSXconvert():
             dtype = 'ByteTableFieldDefinition'
         if fname == 'ProgressionDescriptions' and val == 'Type':
             dtype = 'FixedStringTableFieldDefinition'
-        if (fname == 'Spells' or fname == 'Abilities' or fname == 'Passives' or fname == 'Skills') and val == 'SelectorId':
-            dtype = 'StringTableFieldDefinition'
+        if (fname == 'Spells' or fname == 'Abilities' or fname == 'Passives' or fname == 'Skills'):
+            if val == 'SelectorId':
+                dtype = 'StringTableFieldDefinition'
+            if val == 'ClassUUID':
+                dtype = 'GuidTableFieldDefinition'
         if self.ftype == 'CompanionPresets' and key == 'RootTemplate':
             dtype = 'GuidTableFieldDefinition'
         if self.ftype == 'Origins':
@@ -205,6 +230,25 @@ class LSXconvert():
             return l[idx]
         except IndexError:
             return default
+
+    def genUUID(self):
+        uuid = ""
+        for i in range(36):
+            if i == 8 or i == 13 or i == 18 or i == 23:
+                uuid += "-"
+            else:
+                uuid += random.choice("abcdef0123456789")
+        return uuid
+
+    # Check if node contains element
+    def nodeHasEntry(self, node, entry):
+        try:
+            for x in node:
+                if x.get('@name', None) == entry:
+                    return True
+            return False
+        except Exception:
+            return False
 
 # Convert every lsx file in dir
 if __name__ == "__main__":
