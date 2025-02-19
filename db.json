@@ -405,7 +405,7 @@
             "EventType": "TutorialEventType",
             "UserAction": "TutorialUserAction",
             "ObjectSize": "ObjectSize",
-            "DefaultForBodyType": "BodyType",
+            "DefaultForBodyType": {"0":"Male","1":"Female","2":"Max"},
             "SkinType": "CharacterCreatorSkinTypes",
             "SpellIntent": "VerbalIntent",
             "Animation": "WallAnimationType",
@@ -1304,6 +1304,8 @@
         "WaitForEndCC": "BoolTableFieldDefinition",
         "WaitForLayers": "BoolTableFieldDefinition",
         "CastEffectTextEvent": "StringTableFieldDefinition",
-        "LocatorName": "FixedStringTableFieldDefinition"
+        "LocatorName": "FixedStringTableFieldDefinition",
+        "SpellType": "",
+        "StatusType": ""
     }
 }
