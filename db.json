@@ -1306,6 +1306,8 @@
         "CastEffectTextEvent": "StringTableFieldDefinition",
         "LocatorName": "FixedStringTableFieldDefinition",
         "SpellType": "",
-        "StatusType": ""
+        "StatusType": "",
+        "MinLevelDiff": "IntegerTableFieldDefinition",
+        "MaxLevelDiff": "IntegerTableFieldDefinition"
     }
 }
