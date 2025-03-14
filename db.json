@@ -284,7 +284,8 @@
             "BoostContext": "StatsFunctorContext",
             "EnabledContext": "StatsFunctorContext",
             "ToggleOffContext": "StatsFunctorContext",
-            "RequirementEvents": "StatusEvent"
+            "RequirementEvents": "StatusEvent",
+            "Weapon Properties": "WeaponFlags"
         },
         "EnumSubTypes": {
             "PrimaryAbility": {"1":"Strength","2":"Dexterity","3":"Constitution","4":"Intelligence","5":"Wisdom","6":"Charisma"},
@@ -422,7 +423,8 @@
             "BoostContext": "StatsFunctorContext",
             "EnabledContext": "StatsFunctorContext",
             "ToggleOffContext": "StatsFunctorContext",
-            "RequirementEvents": "StatusEvent"
+            "RequirementEvents": "StatusEvent",
+            "BoolTableFieldDefinition": {"0":"false","1":"true"}
         },
         "DisplayName": "TranslatedStringTableFieldDefinition",
         "MaterialPresetUUID": "GuidTableFieldDefinition",

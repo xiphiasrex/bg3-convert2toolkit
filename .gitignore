@@ -6,3 +6,8 @@
 /auxdb.json
 /convert/
 /auxdb_self_recovered.temp
+
+/settings.json
+
+# bg3 visual resource collector
+/freedom_mod/

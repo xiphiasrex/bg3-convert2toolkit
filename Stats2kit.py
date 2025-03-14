@@ -26,15 +26,18 @@ class StatsConvert():
         self.file = file
         with open(file, encoding="utf-8-sig") as f:
             self.data = f.read()
-        self.writexml(self.convert_all())
+        return self.writexml(self.convert_all())
 
     # Write data to xml file
     def writexml(self, data, file = None):
         if file is None:
             file = self.file
+        if data is None:
+            return False
         out = file.replace('.txt', '.stats').replace('Spell_', '')
         with open(out, 'w') as f:
             f.write(xmltodict.unparse(data, pretty=True, indent='  '))
+        return True
 
     # Convert function logic
     def convert_all(self):
@@ -108,7 +111,7 @@ class StatsConvert():
         return construct
 
     # Generate xml object to construct entry data
-    def gen_dict(self, data, i):
+    def gen_dict(self, data, i = 1):
         fname, fext = os.path.splitext(os.path.basename(self.file).replace("Spell_",""))
         try:
             builder = {'@name': data[0], '@type': self.db['DataTypes'].get(data[0], ''), '@value':''}
@@ -186,7 +189,7 @@ class StatsConvert():
 
             if line.startswith("new subtable"):
                 if has_subtable:
-                    builder = self.gen_dict(["Using", base_table_uuid], 1)
+                    builder = self.gen_dict(["Using", base_table_uuid])
                     if not builder is None:
                         t.append(builder)
                     t.append({'@name': 'UUID', '@type': 'IdTableFieldDefinition', '@value': self.genUUID()})
@@ -194,17 +197,17 @@ class StatsConvert():
                 else:
                     has_subtable = True
 
-                builder = self.gen_dict(["DropCount", tokens[2].strip('"')], 1)
+                builder = self.gen_dict(["DropCount", tokens[2].strip('"')])
                 if not builder is None:
                     t.append(builder)
                 continue
 
             if line.startswith("object category"):
                 fields = tokens[2].strip('"').split(',')
-                builder = self.gen_dict(["ObjectCategory", fields[0].strip('"')], 1)
+                builder = self.gen_dict(["ObjectCategory", fields[0].strip('"')])
                 if not builder is None:
                     t.append(builder)
-                builder = self.gen_dict(["Frequency", fields[1].strip('"')], 1)
+                builder = self.gen_dict(["Frequency", fields[1].strip('"')])
                 if not builder is None:
                     t.append(builder)
                 continue
