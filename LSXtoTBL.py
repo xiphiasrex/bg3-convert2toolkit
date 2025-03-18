@@ -48,7 +48,7 @@ class LSXconvert():
         if data is None:
             return False
         out = file.replace('.lsx', '.tbl')
-        with open(out, 'w') as f:
+        with open(out, 'w', encoding="utf-8") as f:
             f.write(xmltodict.unparse(data, pretty=True, indent='  '))
         return True
 

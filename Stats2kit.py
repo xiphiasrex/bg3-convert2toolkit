@@ -95,6 +95,13 @@ class StatsConvert():
                     t = []
                     i = 0
                     dupes = []
+            # Append current construct if file did not end on an empty line
+            if i != 0:
+                if not (not t):
+                    construct['stats']['stat_objects']['stat_object'].append({'@is_substat': 'false', 'fields': {'field': t}})
+                t = []
+                i = 0
+                dupes = []
 
         # Try fixing parent IDs
         isRecovered = True
@@ -142,6 +149,7 @@ class StatsConvert():
             print(f'[stats] Exception: {e}; Ignored')
             return None
 
+    # Generate a new UUID
     def genUUID(self):
         uuid = ""
         for i in range(36):
@@ -151,11 +159,13 @@ class StatsConvert():
                 uuid += random.choice("abcdef0123456789")
         return uuid
 
+    # Check if a given string is a valid GUID
     def is_guid(self, val):
         if len(val) == 36 and val[8:9:] == "-" and val[13:14:] == "-" and val[18:19:] == "-" and val[23:24:] == "-":
             return True
         return False
 
+    # Convert treasure table logic
     def process_treasure_table(self, construct: dict):
         t = []
         has_subtable = False
