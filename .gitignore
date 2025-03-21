@@ -2,7 +2,7 @@
 /shelf/
 /workspace.xml
 /.idea/
-/__pycache__/
+__pycache__/
 /auxdb.json
 /convert/
 /auxdb_self_recovered.temp

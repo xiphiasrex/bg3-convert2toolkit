@@ -5,10 +5,10 @@ import xmltodict
 import json
 import os
 
-from LSXtoTBL import LSXconvert
-from Stats2kit import StatsConvert
-from compiledb import CompileDB
-from fixlocale import FixLocale
+from helpers.LSXtoTBL import LSXconvert
+from helpers.Stats2kit import StatsConvert
+from helpers.compiledb import CompileDB
+from helpers.fixlocale import FixLocale
 
 exclusions = ['meta.lsx']
 forcefail = ['Rulebook.lsx', 'SpellSet.txt']
