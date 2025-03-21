@@ -3,7 +3,7 @@ from pathlib import Path
 from colorama import Fore, Back, Style
 import colorama
 import json, random
-import os
+import os, sys
 
 class LSXconvert():
     data = None
@@ -56,14 +56,23 @@ class LSXconvert():
     def convert_all(self):
         fname, fext = os.path.splitext(os.path.basename(self.file))
 
+        # Get data type
         if isinstance(self.data['save']['region'], list):
             self.ftype = self.data['save']['region'][0].get('@id', fname)
         else:
             self.ftype = self.data['save']['region'].get('@id', fname)
+
+        # Ignore Texture Atlas
         if self.ftype == 'IconUVList' or self.ftype == 'TextureAtlasInfo':
             print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(self.file)} (Reason: Atlas doesnt need conversion){Fore.WHITE}')
             return None
 
+        # Convert Visual Resource to LSF
+        if self.ftype == 'SkeletonBank' or self.ftype == 'MaterialBank' or self.ftype == 'TextureBank' or self.ftype == 'VisualBank':
+            self.lsx2lsf()
+            return None
+
+        # Override uuid
         if self.uuid is None:
             nodeUUID = ''
         else:
@@ -73,7 +82,7 @@ class LSXconvert():
 
         construct = {'stats': {'@stat_object_definition_id': nodeUUID, 'stat_objects': {'stat_object': []}}}
 
-        try:
+        try: # Try adding recovered entries to auxiliary db
             with open('auxdb_self_recovered.temp', encoding="utf-8") as f:
                 self.auxIDfix = json.load(f)
         except Exception as e:
@@ -249,6 +258,47 @@ class LSXconvert():
             return False
         except Exception:
             return False
+
+    # Convert to LSF (Modified from BG3 Mod Helpers)
+    def lsx2lsf(self):
+        #print(f'{Fore.GREEN}[info] Converted {os.path.basename(file)} (Converted to LSF){Fore.RESET}')
+        divine = Path(f'./LSLibDivine/Packed/')
+        lslib_dll = divine.is_dir() and divine.joinpath("LSLib.dll") or divine.parent.joinpath("LSLib.dll")
+        import clr, ctypes
+
+        if not lslib_dll.exists():
+            print('No LSLib')
+            return False
+
+        #from System.Reflection import Assembly
+        #Assembly.LoadFrom(str(lslib_dll.absolute()))
+        #clr.AddReference("LSLib")
+        if not str(divine.absolute()) in sys.path:
+            sys.path.append(str(divine.absolute()))
+
+        print(str(lslib_dll.absolute()))
+
+        LSLib = ctypes.WinDLL(str(lslib_dll.absolute()))
+
+        from LSLib.LS import ResourceUtils, ResourceConversionParameters, ResourceLoadParameters
+        from LSLib.LS.Enums import Game, ResourceFormat
+        
+        load_params = ResourceLoadParameters.FromGameVersion(Game.BaldursGate3)
+        conversion_params = ResourceConversionParameters.FromGameVersion(Game.BaldursGate3)
+
+        file = Path(self.file)
+        ext = file.suffix.lower()
+        output = file.with_suffix(".lsf")
+
+        input_str = str(file.absolute())
+        output_str = str(output.absolute())
+        
+        out_format = ResourceUtils.ExtensionToResourceFormat(output_str)
+        resource = ResourceUtils.LoadResource(input_str, load_params)
+        ResourceUtils.SaveResource(resource, output_str, out_format, conversion_params)
+
+        print('Done')
+        return True
 
 # Convert every lsx file in dir
 if __name__ == "__main__":
