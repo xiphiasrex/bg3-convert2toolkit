@@ -28,7 +28,6 @@ class LSXconvert():
     def convert(self, file):
         self.file = file
         if self.is_file_guid(os.path.basename(file).split(".")[0]):
-            #raise Exception('Cannot convert to binary')
             print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(self.file)} (Reason: Cannot convert binary){Fore.WHITE}')
             return False
         self.readxml(file)
@@ -64,7 +63,7 @@ class LSXconvert():
 
         # Ignore Texture Atlas
         if self.ftype == 'IconUVList' or self.ftype == 'TextureAtlasInfo':
-            print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(self.file)} (Reason: Atlas doesnt need conversion){Fore.WHITE}')
+            print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(self.file)} (Reason: Texture atlas doesnt need conversion){Fore.WHITE}')
             return None
 
         # Convert Visual Resource to LSF
@@ -259,25 +258,24 @@ class LSXconvert():
         except Exception:
             return False
 
-    # Convert to LSF (Modified from BG3 Mod Helpers)
+    # Convert to LSF (Modified from BG3ModdingTools)
     def lsx2lsf(self):
-        #print(f'{Fore.GREEN}[info] Converted {os.path.basename(file)} (Converted to LSF){Fore.RESET}')
         divine = Path(f'./LSLibDivine/Packed/Tools')
         lslib_dll = divine.is_dir() and divine.joinpath("LSLib.dll") or divine.parent.joinpath("LSLib.dll")
-        # print(str(lslib_dll.absolute()))
 
         if not lslib_dll.exists():
-            print('No LSLib')
+            print(f'{Fore.RED}[lsf] Cant convert {os.path.basename(self.file)} (LSLib not found){Fore.RESET}')
             return False
 
         # Setting up lslib dll for use
         import pythonnet
         pythonnet.load('coreclr')
         import clr
-        sys.path.append(str(lslib_dll.parent.absolute()))
-        clr.AddReference("LSLib") # type: ignore
-        from LSLib.LS import ResourceUtils, ResourceConversionParameters, ResourceLoadParameters # type: ignore
-        from LSLib.LS.Enums import Game, ResourceFormat # type: ignore
+        if not str(lslib_dll.parent.absolute()) in sys.path:
+            sys.path.append(str(lslib_dll.parent.absolute()))
+        clr.AddReference("LSLib")
+        from LSLib.LS import ResourceUtils, ResourceConversionParameters, ResourceLoadParameters
+        from LSLib.LS.Enums import Game, ResourceFormat
         
         load_params = ResourceLoadParameters.FromGameVersion(Game.BaldursGate3)
         conversion_params = ResourceConversionParameters.FromGameVersion(Game.BaldursGate3)
@@ -292,7 +290,7 @@ class LSXconvert():
         resource = ResourceUtils.LoadResource(input_str, load_params)
         ResourceUtils.SaveResource(resource, output_str, out_format, conversion_params)
 
-        print('Done')
+        print(f'{Fore.GREEN}[info] Converted {os.path.basename(self.file)} (Converted to LSF){Fore.RESET}')
         return True
 
 # Convert every lsx file in dir
