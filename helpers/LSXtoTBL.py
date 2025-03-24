@@ -12,6 +12,8 @@ class LSXconvert():
     db = None
     auxIDfix = None
 
+    lsftypes = ['Templates','SkeletonBank','MaterialBank','TextureBank','VisualBank','EffectBank','Tags','MultiEffectInfos']
+
     with open('db.json', encoding="utf-8") as f:
         backup_db = json.load(f)
 
@@ -27,9 +29,6 @@ class LSXconvert():
     # Main call convert function
     def convert(self, file):
         self.file = file
-        if self.is_file_guid(os.path.basename(file).split(".")[0]):
-            print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(self.file)} (Reason: Cannot convert binary){Fore.WHITE}')
-            return False
         self.readxml(file)
         return self.writexml(self.convert_all())
     
@@ -56,18 +55,20 @@ class LSXconvert():
         fname, fext = os.path.splitext(os.path.basename(self.file))
 
         # Get data type
-        if isinstance(self.data['save']['region'], list):
-            self.ftype = self.data['save']['region'][0].get('@id', fname)
-        else:
-            self.ftype = self.data['save']['region'].get('@id', fname)
+        self.ftype = self.getDataType()
 
         # Ignore Texture Atlas
-        if self.ftype == 'IconUVList' or self.ftype == 'TextureAtlasInfo':
+        if self.ftype in ['IconUVList','TextureAtlasInfo']:
             print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(self.file)} (Reason: Texture atlas doesnt need conversion){Fore.WHITE}')
             return None
 
-        # Convert Visual Resource to LSF
-        if self.ftype == 'SkeletonBank' or self.ftype == 'MaterialBank' or self.ftype == 'TextureBank' or self.ftype == 'VisualBank':
+        # Ignore VFX
+        if self.ftype in ['Effect']:
+            print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(self.file)} (Reason: VFX not yet supported){Fore.WHITE}')
+            return None
+
+        # Convert Visual Resource or Templates to LSF
+        if self.ftype in self.lsftypes:
             self.lsx2lsf()
             return None
 
@@ -162,10 +163,6 @@ class LSXconvert():
                             val = 'ProgressionUUID'
                         if val == 'OriginUUID':
                             val = 'Origin'
-                        if val == 'TableUUID':
-                            val = 'ProgressionUUID'
-                        if val == 'TableUUID':
-                            val = 'ProgressionUUID'
                         if val == 'Add' and fname != 'Spells':
                             val = 'DefaultValues'
                     if fname == 'ClassDescriptions' and val == 'ParentGuid':
@@ -258,13 +255,30 @@ class LSXconvert():
         except Exception:
             return False
 
+    def getDataType(self, file = None):
+        if not file is None:
+            self.readxml(file)
+        else:
+            file = self.file
+        fname, fext = os.path.splitext(os.path.basename(file))
+
+        # Get data type
+        if isinstance(self.data['save']['region'], list):
+            return self.data['save']['region'][0].get('@id', fname)
+        else:
+            return self.data['save']['region'].get('@id', fname)
+
     # Convert to LSF (Modified from BG3ModdingTools)
-    def lsx2lsf(self):
+    def lsx2lsf(self, file = None, verbose = True):
+        if file is None:
+            file = self.file
+
         divine = Path(f'./LSLibDivine/Packed/Tools')
         lslib_dll = divine.is_dir() and divine.joinpath("LSLib.dll") or divine.parent.joinpath("LSLib.dll")
 
         if not lslib_dll.exists():
-            print(f'{Fore.RED}[lsf] Cant convert {os.path.basename(self.file)} (LSLib not found){Fore.RESET}')
+            if verbose:
+                print(f'{Fore.RED}[lsf] Cant convert {os.path.basename(file)} (LSLib not found){Fore.RESET}')
             return False
 
         # Setting up lslib dll for use
@@ -280,8 +294,10 @@ class LSXconvert():
         load_params = ResourceLoadParameters.FromGameVersion(Game.BaldursGate3)
         conversion_params = ResourceConversionParameters.FromGameVersion(Game.BaldursGate3)
 
-        file_path = Path(self.file)
+        file_path = Path(file)
         output = file_path.with_suffix(".lsf")
+        if output.exists():
+            os.remove(output)
 
         input_str = str(file_path.absolute())
         output_str = str(output.absolute())
@@ -290,7 +306,8 @@ class LSXconvert():
         resource = ResourceUtils.LoadResource(input_str, load_params)
         ResourceUtils.SaveResource(resource, output_str, out_format, conversion_params)
 
-        print(f'{Fore.GREEN}[info] Converted {os.path.basename(self.file)} (Converted to LSF){Fore.RESET}')
+        if verbose:
+            print(f'{Fore.GREEN}[info] Converted {os.path.basename(self.file)} (Converted to LSF){Fore.RESET}')
         return True
 
 # Convert every lsx file in dir

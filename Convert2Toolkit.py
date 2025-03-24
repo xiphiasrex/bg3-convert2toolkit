@@ -9,6 +9,7 @@ from helpers.LSXtoTBL import LSXconvert
 from helpers.Stats2kit import StatsConvert
 from helpers.compiledb import CompileDB
 from helpers.fixlocale import FixLocale
+from helpers.projectBuilder import projectBuilder
 
 exclusions = ['meta.lsx']
 forcefail = ['Rulebook.lsx', 'SpellSet.txt']
@@ -21,9 +22,23 @@ def ConvertDB(file, db, converter):
 		converter.setUUID(fuuid)
 		chk = converter.convert(str(file))
 		if chk:
-			print(f'{Fore.GREEN}[info] Converted {os.path.basename(file)} (UUID: {fuuid}){Fore.RESET}')
+			if fuuid is None:
+				print(f'{Fore.YELLOW}[info] Converted {os.path.basename(file)} (No UUID found: Incorrect filename){Fore.RESET}')
+			else:
+				print(f'{Fore.GREEN}[info] Converted {os.path.basename(file)} (UUID: {fuuid}){Fore.RESET}')
+			return True
 	except Exception as e:
+		if is_file_guid(os.path.basename(file).split(".")[0]):
+			print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(file)} (Reason: Cannot convert binary){Fore.WHITE}')
+			return True
 		print(f'{Fore.RED}[info] Failed to convert {os.path.basename(file)}:\n\tError: {e}\n\tFile: {file}{Fore.RESET}')
+		return False
+
+# Check if name or file is of guid type
+def is_file_guid(file):
+	if len(file) == 36 and file[8:9:] == "-" and file[13:14:] == "-" and file[18:19:] == "-" and file[23:24:] == "-":
+		return True
+	return False
 
 # Convert any projects in convert folder
 if __name__ == "__main__":
@@ -55,6 +70,7 @@ if __name__ == "__main__":
 	conv_lsx = LSXconvert(db)
 	conv_stats = StatsConvert(db, auxdb)
 	fix_locale = FixLocale()
+	proj_build = projectBuilder()
 
 	Path("./convert/").mkdir(parents=True, exist_ok=True)
 
@@ -83,3 +99,12 @@ if __name__ == "__main__":
 			print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(file)} (Reason: Not yet supported){Fore.RESET}')
 			continue
 		fix_locale.fix(file, conv_lsx)
+
+	# Check and build Projects
+	print('')
+	for file in os.listdir('./convert/'):
+		fname = f'./convert/{file}/'
+		if Path(fname).is_dir():
+			if proj_build.isProject(fname):
+				proj_build.addProject(fname)
+	proj_build.buildAll(True)
