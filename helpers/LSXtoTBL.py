@@ -262,35 +262,30 @@ class LSXconvert():
     # Convert to LSF (Modified from BG3 Mod Helpers)
     def lsx2lsf(self):
         #print(f'{Fore.GREEN}[info] Converted {os.path.basename(file)} (Converted to LSF){Fore.RESET}')
-        divine = Path(f'./LSLibDivine/Packed/')
+        divine = Path(f'./LSLibDivine/Packed/Tools')
         lslib_dll = divine.is_dir() and divine.joinpath("LSLib.dll") or divine.parent.joinpath("LSLib.dll")
-        import clr, ctypes
+        # print(str(lslib_dll.absolute()))
 
         if not lslib_dll.exists():
             print('No LSLib')
             return False
 
-        #from System.Reflection import Assembly
-        #Assembly.LoadFrom(str(lslib_dll.absolute()))
-        #clr.AddReference("LSLib")
-        if not str(divine.absolute()) in sys.path:
-            sys.path.append(str(divine.absolute()))
-
-        print(str(lslib_dll.absolute()))
-
-        LSLib = ctypes.WinDLL(str(lslib_dll.absolute()))
-
-        from LSLib.LS import ResourceUtils, ResourceConversionParameters, ResourceLoadParameters
-        from LSLib.LS.Enums import Game, ResourceFormat
+        # Setting up lslib dll for use
+        import pythonnet
+        pythonnet.load('coreclr')
+        import clr
+        sys.path.append(str(lslib_dll.parent.absolute()))
+        clr.AddReference("LSLib") # type: ignore
+        from LSLib.LS import ResourceUtils, ResourceConversionParameters, ResourceLoadParameters # type: ignore
+        from LSLib.LS.Enums import Game, ResourceFormat # type: ignore
         
         load_params = ResourceLoadParameters.FromGameVersion(Game.BaldursGate3)
         conversion_params = ResourceConversionParameters.FromGameVersion(Game.BaldursGate3)
 
-        file = Path(self.file)
-        ext = file.suffix.lower()
-        output = file.with_suffix(".lsf")
+        file_path = Path(self.file)
+        output = file_path.with_suffix(".lsf")
 
-        input_str = str(file.absolute())
+        input_str = str(file_path.absolute())
         output_str = str(output.absolute())
         
         out_format = ResourceUtils.ExtensionToResourceFormat(output_str)
