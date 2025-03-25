@@ -52,7 +52,7 @@ class projectBuilder():
 
         # Prompt user for input
         if self.prompt:
-            print(f'{Fore.CYAN}[Project] Attempting to create Project \'{pname}\'\nEnter Project name (type X to skip or leave empty to use default): {Fore.RESET}')
+            print(f'{Fore.CYAN}[Project] Attempting to create Project \'{pname_raw}\'\nEnter Project name (type X to skip or leave empty to use default): {Fore.RESET}')
             name = input()
             if name == 'X' or name == 'x': # Skip
                 return False
@@ -69,7 +69,7 @@ class projectBuilder():
                 Path(f'{pdir}/{s}').mkdir(parents=True, exist_ok=True)
             self.createMeta(pdir, pname, pname_raw, pguid)
 
-            # Move all files to the correct location
+            # Copy all files to the correct location
             for file in Path(dirs).rglob('*'):
                 if Path(file).is_dir():
                     continue
@@ -95,11 +95,11 @@ class projectBuilder():
                 if '/Localization/' in pdest and not f'/Mods/{pname}/Localization/' in pdest:
                     pdest = pdest.replace('/Localization/', f'/Mods/{pname}/Localization/')
 
-                ofile = f'{psource}{fsource}'
-                nfile = f'{pdest}{fdest}'
+                ofile = f'{psource}{fsource}'.replace("//", "/")
+                nfile = f'{pdest}{fdest}'.replace("//", "/")
 
                 Path(pdest).mkdir(parents=True, exist_ok=True)
-                if not Path(nfile).exists():
+                if not Path(nfile).exists() and Path(ofile).exists():
                     shutil.copy(ofile, nfile)
 
                 # Edit paths if lsf file and reconvert
@@ -199,7 +199,6 @@ class projectBuilder():
     def translateStructure(self, dirs, file):
         paths = {
             "/Stats/Generated/Data/": "/Stats/",
-            "/Stats/Generated/": "/Stats/",
         }
         files = {
             "Character.stats": "/Stats/",
