@@ -81,6 +81,7 @@ class projectBuilder():
 
                 pdest = re.sub(r'/Public/.*?/', f'/Public/{pname}/', pdest)
                 pdest = re.sub(r'/Mods/.*?/', f'/Mods/{pname}/', pdest)
+                pdest = pdest.replace(f'/Stats/Generated/Data/', f'/Stats/')
 
                 # Change destination if table or stats file
                 if Path(fsource).suffix == '.tbl' or Path(fsource).suffix == '.stats':
@@ -88,7 +89,7 @@ class projectBuilder():
                     pdest = self.translateStructure(pdest, fdest)
 
                 # Fix destination if generated
-                if '/Generated/' in pdest and not '/Generated/Public/' in pdest:
+                if '/Generated/' in pdest and not '/Generated/Public/' in pdest and not '/Stats/Generated/Data/' in pdest:
                     pdest = pdest.replace('/Generated/', f'/Generated/Public/{pname}/')
 
                 # Fix localization

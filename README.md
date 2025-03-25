@@ -13,10 +13,10 @@ If you have missing ``Parent`` entries you can try adding your BG3 install path 
 ``C:/any/folder/until/Baldurs Gate 3/``<br>
 This will enable the converter to read all IDs from your BG3 installation and mods to try and recover them.
 
-If you get an error when converting:<br>
-&emsp;The file format is either wrong or its a format I havent made compatible yet.<br>
-&emsp;Icon Atlases are not supported and will throw an error.<br>
-If you get an error after conversion inside the toolkit:<br>
-&emsp;Post your toolkit error so I can fix it, this means some entry used a different data type than the usual or configured ones.
+If you dropped an entire mod into the conversion folder it will try to setup a project to be used with the toolkit.<br>
+If you get any errors about files not existing you probably need to <b>enable long path names</b>.<br>
+After project conversion, just paste the contents of the newly created folder into your BG3 Data folder:<br>
+``/convert/NewMod_uuid/`` -> ``/Baldurs Gate 3/Data/``<br>
+You need to paste the <b>contents</b> of the new ``/NewMod_uuid/`` folder into your Data folder, not the folder itself.
 
-You can also create merge requests to fix these issues or missing data types.
+You can also create merge requests to fix any issues or missing data types you come across.
