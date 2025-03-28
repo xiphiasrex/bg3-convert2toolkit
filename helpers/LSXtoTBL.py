@@ -11,17 +11,19 @@ class LSXconvert():
     uuid = None
     db = None
     auxIDfix = None
+    lslib_path = None
 
     lsftypes = ['Templates','SkeletonBank','MaterialBank','TextureBank','VisualBank','EffectBank','Tags','MultiEffectInfos']
 
-    with open('db.json', encoding="utf-8") as f:
-        backup_db = json.load(f)
+    # with open('db.json', encoding="utf-8") as f:
+    #     backup_db = json.load(f)
 
     lastName = ''
 
     # Init
-    def __init__(self, db=None):
+    def __init__(self, db=None, lslib_path=None):
         self.db = db
+        self.lslib_path = lslib_path
 
     def setUUID(self, uuid=None):
         self.uuid = uuid
@@ -63,7 +65,7 @@ class LSXconvert():
             return None
 
         # Ignore VFX
-        if self.ftype in ['Effect']:
+        if self.ftype in ['Effect','Dependencies']:
             print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(self.file)} (Reason: VFX not yet supported){Fore.WHITE}')
             return None
 
@@ -273,7 +275,7 @@ class LSXconvert():
         if file is None:
             file = self.file
 
-        divine = Path(f'./LSLibDivine/Packed/Tools')
+        divine = Path(self.lslib_path)
         lslib_dll = divine.is_dir() and divine.joinpath("LSLib.dll") or divine.parent.joinpath("LSLib.dll")
 
         if not lslib_dll.exists():

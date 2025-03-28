@@ -1,4 +1,5 @@
 {
-	"bg3path":"",
-	"compileAux": 1
+	"bg3path": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Baldurs Gate 3",
+	"compileAux": 1,
+	"lslib_path": "C:\\Users\\xiphi\\Documents\\Modding\\Tools\\ExportTool-v1.19.5\\Packed\\Tools"
 }
