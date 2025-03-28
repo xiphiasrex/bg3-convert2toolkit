@@ -21,7 +21,7 @@ class projectBuilder():
         pdir = Path(dirs)
         if not pdir.exists() or not pdir.is_dir():
             return False
-        structure = ['Public/','Mods/','Localization/']
+        structure = ['Public/','Mods/']
         for s in structure:
             if not Path(f'{dirs}/{s}').exists():
                 return False

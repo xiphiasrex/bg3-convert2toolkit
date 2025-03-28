@@ -11,7 +11,7 @@ from helpers.compiledb import CompileDB
 from helpers.fixlocale import FixLocale
 from helpers.projectBuilder import projectBuilder
 
-exclusions = ['meta.lsx']
+exclusions = ['meta.lsx', 'metadata.lsf.lsx']
 forcefail = ['Rulebook.lsx', 'SpellSet.txt']
 
 def ConvertDB(file, db, converter):
