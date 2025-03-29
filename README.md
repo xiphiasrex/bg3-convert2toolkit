@@ -25,8 +25,6 @@ You need to paste the <b>contents</b> of the new `/NewMod_uuid/` folder into you
   - Path to BG3 install
 - `compileAux`
   - 0 or 1 to compile additional UUIDs from Editor projects
-- `lslib_path`
-  - Path to Divine.exe from LSLib
 
 
 ---

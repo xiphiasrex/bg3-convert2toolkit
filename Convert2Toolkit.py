@@ -46,12 +46,7 @@ if __name__ == "__main__":
 	with open('settings.json', encoding="utf-8") as f:
 		settings = json.load(f)
 		bg3path = settings.get('bg3path', '')
-		lslib_path = settings.get('lslib_path', '')
 		compileAux = settings.get('compileAux', 1)
-
-	# Check if LSLib path valid
-	if not Path(f"{lslib_path}/Divine.exe").is_file():
-		raise Exception('Invalid LSLib path')
 
 	try:
 		# Check if bg3 path valid
@@ -75,8 +70,9 @@ if __name__ == "__main__":
 		db = json.load(f)
 
 	path_to_templates = Path(__file__).parent.resolve() / 'helpers/templates'
+	path_to_lslib = Path(__file__).parent.resolve() / 'LSLibDivine/Packed/Tools'
 
-	conv_lsx = LSXconvert(db, lslib_path)
+	conv_lsx = LSXconvert(db, path_to_lslib)
 	conv_stats = StatsConvert(db, auxdb)
 	fix_locale = FixLocale()
 	proj_build = projectBuilder(path_to_templates)

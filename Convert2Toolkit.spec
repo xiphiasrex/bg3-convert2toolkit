@@ -5,7 +5,7 @@ a = Analysis(
     ['Convert2Toolkit.py'],
     pathex=[],
     binaries=[],
-    datas=[('helpers/templates', 'helpers/templates')],
+    datas=[('helpers/templates', 'helpers/templates'), ('LSLibDivine', 'LSLibDivine')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
