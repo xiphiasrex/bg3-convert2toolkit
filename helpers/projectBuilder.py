@@ -105,7 +105,7 @@ class projectBuilder():
                 if not Path(nfile).exists() and Path(ofile).exists():
                     shutil.copy(ofile, nfile)
 
-                # Edit paths if lsf file and reconvert
+                # Edit paths if lsf file and re-convert
                 try:
                     ftype = self.conv_lsx.getDataType(nfile)
                     if not ftype in self.conv_lsx.lsftypes and not ftype in ['IconUVList','TextureAtlasInfo']:
@@ -147,7 +147,6 @@ class projectBuilder():
 
     # Create metadata
     def createMeta(self, pdir, pname, pname_raw, pguid):
-
 
         # Project Metadata
         with open(f'{self.path_to_templates}/project_meta.lsx', 'r', encoding="utf-8") as f:

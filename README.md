@@ -22,9 +22,9 @@ You need to paste the <b>contents</b> of the new `/NewMod_uuid/` folder into you
 ---
 ## Settings
 - `bg3path`
-  - Path to BG3 install
+  - Path to BG3 installation
 - `compileAux`
-  - 0 or 1 to compile additional UUIDs from Editor projects
+  - 0 or 1 to compile additional UUIDs from Editor projects<br>(recommended to set to 0 after running the first time or when needing to recompile)
 
 
 ---
@@ -38,17 +38,17 @@ run `py Convert2Toolkit.py` to start conversion.
 
 
 ---
-## Running exe
+## Running the exe
 - Download latest release, should contain Convert2Toolkit.exe, db.json, and settings.json
 - Adjust settings as needed
-- Create `convert` directory in same location as .exe
-- Put all files/project you want to convert into folder
+- Create the `convert` directory in same location as the .exe
+- Put all files/projects you want to convert into folder
 - Run .exe
 
 
 ---
-## Building exe
-- Make sure pyinstaller installed: `pip install pyinstaller`
+## Building the exe
+- Make sure pyinstaller is installed: `pip install pyinstaller`
 - From project dir run: `pyinstaller.exe --noconfirm .\Convert2Toolkit.spec`
 
 

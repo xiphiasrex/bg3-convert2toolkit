@@ -13,7 +13,7 @@ class LSXconvert():
     auxIDfix = None
     lslib_path = None
 
-    lsftypes = ['Templates','SkeletonBank','MaterialBank','TextureBank','VisualBank','EffectBank','Tags','MultiEffectInfos']
+    lsftypes = ['Templates','SkeletonBank','MaterialBank','TextureBank','VisualBank','EffectBank','Tags','MultiEffectInfos','CharacterVisualBank','Material','MaterialPresetBank']
 
     # with open('db.json', encoding="utf-8") as f:
     #     backup_db = json.load(f)
@@ -21,11 +21,11 @@ class LSXconvert():
     lastName = ''
 
     # Init
-    def __init__(self, db=None, lslib_path=None):
+    def __init__(self, db = None, lslib_path = None):
         self.db = db
         self.lslib_path = lslib_path
 
-    def setUUID(self, uuid=None):
+    def setUUID(self, uuid = None):
         self.uuid = uuid
 
     # Main call convert function
