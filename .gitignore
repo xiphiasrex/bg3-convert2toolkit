@@ -6,6 +6,8 @@ __pycache__/
 /auxdb.json
 /convert/
 /auxdb_self_recovered.temp
+/build/
+/dist/
 
 settings.json
 

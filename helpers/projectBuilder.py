@@ -11,10 +11,12 @@ class projectBuilder():
     data = None
     prompt = False
     projects = []
+    path_to_templates = None
 
     # Init
-    def __init__(self):
+    def __init__(self, path_to_templates: Path):
         self.conv_lsx = LSXconvert()
+        self.path_to_templates = path_to_templates
 
     # Check if path is a workspace resembling a project
     def isProject(self, dirs):
@@ -145,8 +147,10 @@ class projectBuilder():
 
     # Create metadata
     def createMeta(self, pdir, pname, pname_raw, pguid):
+
+
         # Project Metadata
-        with open('./helpers/templates/project_meta.lsx', 'r', encoding="utf-8") as f:
+        with open(f'{self.path_to_templates}/project_meta.lsx', 'r', encoding="utf-8") as f:
             data = f.read()
 
         data = data.replace('$MODULE_ID', pguid)
@@ -157,7 +161,7 @@ class projectBuilder():
             f.write(data)
 
         # Mod Metadata
-        with open('./helpers/templates/mod_meta.lsx', 'r', encoding="utf-8") as f:
+        with open(f'{self.path_to_templates}/mod_meta.lsx', 'r', encoding="utf-8") as f:
             data = f.read()
 
         data = data.replace('$MOD_FOLDER', self.xmlesc(pname))

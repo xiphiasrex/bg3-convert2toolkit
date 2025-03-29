@@ -1,7 +1,5 @@
 from pathlib import Path
-from colorama import Fore, Back, Style
-import colorama
-import xmltodict
+from colorama import Fore
 import json
 import os
 
@@ -44,16 +42,20 @@ def is_file_guid(file):
 if __name__ == "__main__":
 	# Load Settings
 	auxdb = None
-	try:
-		with open('settings.json', encoding="utf-8") as f:
-			settings = json.load(f)
 
+	with open('settings.json', encoding="utf-8") as f:
+		settings = json.load(f)
+		bg3path = settings.get('bg3path', '')
+		compileAux = settings.get('compileAux', 1)
+
+	try:
 		# Check if bg3 path valid
-		if not Path(f"{settings.get('bg3path','')}/bin/bg3.exe").is_file():
+		if not Path(f"{bg3path}/bin/bg3.exe").is_file():
 			raise Exception('')
-		
-		compdb = CompileDB(settings.get('bg3path',''))
-		if settings.get('compileAux',1):
+
+		compdb = CompileDB(bg3path)
+
+		if compileAux:
 			print(f'{Fore.YELLOW}[config] bg3.exe found\n[db] Compiling auxiliary ID Database...{Fore.RESET}')
 			auxdb = compdb.compileAuxiliaryDB()
 		else:
@@ -67,10 +69,13 @@ if __name__ == "__main__":
 	with open('db.json', encoding="utf-8") as f:
 		db = json.load(f)
 
-	conv_lsx = LSXconvert(db)
+	path_to_templates = Path(__file__).parent.resolve() / 'helpers/templates'
+	path_to_lslib = Path(__file__).parent.resolve() / 'LSLibDivine/Packed/Tools'
+
+	conv_lsx = LSXconvert(db, path_to_lslib)
 	conv_stats = StatsConvert(db, auxdb)
 	fix_locale = FixLocale()
-	proj_build = projectBuilder()
+	proj_build = projectBuilder(path_to_templates)
 
 	Path("./convert/").mkdir(parents=True, exist_ok=True)
 
