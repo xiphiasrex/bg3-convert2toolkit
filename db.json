@@ -285,7 +285,10 @@
             "EnabledContext": "StatsFunctorContext",
             "ToggleOffContext": "StatsFunctorContext",
             "RequirementEvents": "StatusEvent",
-            "Weapon Properties": "WeaponFlags"
+            "Weapon Properties": "WeaponFlags",
+            "Proficiency Group": "ProficiencyGroupFlags",
+            "ValueOverride": "YesNo",
+            "InterruptFlags": "InterruptFlagsList"
         },
         "EnumSubTypes": {
             "PrimaryAbility": {"1":"Strength","2":"Dexterity","3":"Constitution","4":"Intelligence","5":"Wisdom","6":"Charisma"},
@@ -424,7 +427,8 @@
             "EnabledContext": "StatsFunctorContext",
             "ToggleOffContext": "StatsFunctorContext",
             "RequirementEvents": "StatusEvent",
-            "BoolTableFieldDefinition": {"0":"false","1":"true"}
+            "BoolTableFieldDefinition": {"0":"false","1":"true"},
+            "YesNo": {"0":"No","1":"Yes"}
         },
         "DisplayName": "TranslatedStringTableFieldDefinition",
         "MaterialPresetUUID": "GuidTableFieldDefinition",
@@ -937,6 +941,7 @@
         "InterruptContextScope": "EnumerationListTableFieldDefinition",
         "Container": "StringTableFieldDefinition",
         "ValueRounding": "BoolTableFieldDefinition",
+        "ValueOverride": "EnumerationTableFieldDefinition",
         "ToggleOnFunctors": "FunctorsTableFieldDefinition",
         "ToggleOffFunctors": "FunctorsTableFieldDefinition",
         "EnabledContext": "EnumerationListTableFieldDefinition",
@@ -1310,6 +1315,7 @@
         "SpellType": "",
         "StatusType": "",
         "MinLevelDiff": "IntegerTableFieldDefinition",
-        "MaxLevelDiff": "IntegerTableFieldDefinition"
+        "MaxLevelDiff": "IntegerTableFieldDefinition",
+        "InterruptFlags": "EnumerationListTableFieldDefinition"
     }
 }

@@ -54,7 +54,7 @@ class StatsConvert():
         # Special handling for awesome treasure tables
         if self.data.startswith(("treasure", "new treasuretable")):
             self.process_treasure_table(construct)
-        else:
+        else: # All other files
             # Read line by line
             t = []
             i = 0
@@ -64,11 +64,17 @@ class StatsConvert():
                 i += 1
                 raw = line.split('"')[1::2]
 
-                if len(raw) > 0: # Ignore duplicated entries
+                if len(raw) > 0: # Ignore duplicate entries
                     if raw[0] in dupes:
                         continue
                     dupes.append(raw[0])
                 if line[:3:] == "new": # Data definition entries
+                    if len(t) > 0: # Data seperation
+                        if not (not t):
+                            construct['stats']['stat_objects']['stat_object'].append({'@is_substat': 'false', 'fields': {'field': t}})
+                        t = []
+                        i = 0
+                    dupes = []
                     newUID = self.genUUID()
                     nameval = raw[0].replace(f'{os.path.basename(self.file).split(".")[0].replace("Spell_","")}_', '')
 
@@ -85,16 +91,16 @@ class StatsConvert():
                     t.append({'@name': 'Using', '@type': 'BaseClassTableFieldDefinition', '@value': self.auxdb.get(raw[0],raw[0])})
                     continue
                 if line[:4:] == "data": # Data entries
-                    builder = self.gen_dict(raw, i)
+                    builder = self.gen_dict(raw)
                     if not builder is None:
                         t.append(builder)
                     continue
-                if line == '': # Data seperator
-                    if not (not t):
-                        construct['stats']['stat_objects']['stat_object'].append({'@is_substat': 'false', 'fields': {'field': t}})
-                    t = []
-                    i = 0
-                    dupes = []
+                # if line == '': # Data seperator
+                #     if not (not t):
+                #         construct['stats']['stat_objects']['stat_object'].append({'@is_substat': 'false', 'fields': {'field': t}})
+                #     t = []
+                #     i = 0
+                #     dupes = []
             # Append current construct if file did not end on an empty line
             if i != 0:
                 if not (not t):
@@ -118,7 +124,7 @@ class StatsConvert():
         return construct
 
     # Generate xml object to construct entry data
-    def gen_dict(self, data, i = 1):
+    def gen_dict(self, data, legacy = False):
         fname, fext = os.path.splitext(os.path.basename(self.file).replace("Spell_",""))
         try:
             builder = {'@name': data[0], '@type': self.db['DataTypes'].get(data[0], ''), '@value':''}
@@ -139,11 +145,16 @@ class StatsConvert():
                     return None
                 if builder['@value'] == '':
                     builder['@value'] = data[1]
-            if self.db['DataTypes'].get(data[0], '') == '' and i != 3: # i = 3; ignore types
-                print(f'{Fore.YELLOW}[stats] Missing Pre-Configured Data Type: {data[0]}{Fore.WHITE}')
+            if self.db['DataTypes'].get(data[0], '') == '':
+                if not data[0] in ['SpellType', 'StatusType']:
+                    print(f'{Fore.YELLOW}[stats] Missing Pre-Configured Data Type: {data[0]}{Fore.WHITE}')
             if self.db['DataTypes'].get(data[0], '') == "EnumerationListTableFieldDefinition" or self.db['DataTypes'].get(data[0], '') == "EnumerationTableFieldDefinition": # Enum types
                 builder['@enumeration_type_name'] = self.db['DataTypes']['EnumTypes'].get(data[0], data[0])
                 builder['@version'] = "1"
+                if not builder['@value'] == '':
+                    val = self.db['DataTypes']['EnumSubTypes'].get(builder['@enumeration_type_name'], builder['@value'])
+                    if isinstance(val, dict):
+                        builder['@value'] = val.get(builder['@value'], builder['@value'])
             return builder
         except Exception as e:
             print(f'[stats] Exception: {e}; Ignored')
@@ -232,7 +243,7 @@ class StatsConvert():
                         field_value = 'Yes'
                     else:
                         field_value = 'No'
-                builder = self.gen_dict([field_name, field_value], 1)
+                builder = self.gen_dict([field_name, field_value])
                 if not builder is None:
                     t.append(builder)
                 continue
