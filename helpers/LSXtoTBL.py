@@ -13,7 +13,7 @@ class LSXconvert():
     auxIDfix = None
     lslib_path = None
 
-    lsftypes = ['Templates','SkeletonBank','MaterialBank','TextureBank','VisualBank','EffectBank','Tags','MultiEffectInfos','CharacterVisualBank','Material','MaterialPresetBank']
+    lsf_types = ['Templates', 'SkeletonBank', 'MaterialBank', 'TextureBank', 'VisualBank', 'EffectBank', 'Tags', 'MultiEffectInfos', 'CharacterVisualBank', 'Material', 'MaterialPresetBank']
 
     # with open('db.json', encoding="utf-8") as f:
     #     backup_db = json.load(f)
@@ -22,6 +22,7 @@ class LSXconvert():
 
     # Init
     def __init__(self, db = None, lslib_path = None):
+        self.file_type = None
         self.db = db
         self.lslib_path = lslib_path
 
@@ -57,20 +58,21 @@ class LSXconvert():
         fname, fext = os.path.splitext(os.path.basename(self.file))
 
         # Get data type
-        self.ftype = self.getDataType()
+        self.file_type = self.getDataType()
 
         # Ignore Texture Atlas
-        if self.ftype in ['IconUVList','TextureAtlasInfo']:
+        if self.file_type in ['IconUVList', 'TextureAtlasInfo']:
             print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(self.file)} (Reason: Texture atlas doesnt need conversion){Fore.WHITE}')
             return None
 
         # Ignore VFX
-        if self.ftype in ['Effect','Dependencies']:
-            print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(self.file)} (Reason: VFX not yet supported){Fore.WHITE}')
+        if self.file_type in ['Effect','Dependencies']:
+            print(f'{Fore.YELLOW}[info] Convert file to lsfx: {os.path.basename(self.file)} (Reason: VFX to lsefx not yet supported){Fore.WHITE}')
+            self.lsx2lsf(lsfx=True)
             return None
 
         # Convert Visual Resource or Templates to LSF
-        if self.ftype in self.lsftypes:
+        if self.file_type in self.lsf_types:
             self.lsx2lsf()
             return None
 
@@ -78,7 +80,7 @@ class LSXconvert():
         if self.uuid is None:
             nodeUUID = ''
         else:
-            nodeUUID = self.db['LSX'].get(self.ftype, self.uuid)
+            nodeUUID = self.db['LSX'].get(self.file_type, self.uuid)
             if nodeUUID != self.uuid:
                 print(f"{Fore.YELLOW}[lsx] ID Override for {os.path.basename(self.file)}: {nodeUUID} ({self.data['save']['region'].get('@id', None)}){Fore.WHITE}")
 
@@ -160,7 +162,7 @@ class LSXconvert():
             for key, val in node.items():
                 if key == '@id':
                     # Hardcoded lsx name fixes
-                    if self.ftype == 'DefaultValues':
+                    if self.file_type == 'DefaultValues':
                         if val == 'TableUUID':
                             val = 'ProgressionUUID'
                         if val == 'OriginUUID':
@@ -213,14 +215,14 @@ class LSXconvert():
                 dtype = 'StringTableFieldDefinition'
             if val == 'ClassUUID':
                 dtype = 'GuidTableFieldDefinition'
-        if self.ftype == 'CompanionPresets' and key == 'RootTemplate':
+        if self.file_type == 'CompanionPresets' and key == 'RootTemplate':
             dtype = 'GuidTableFieldDefinition'
-        if self.ftype == 'Origins':
+        if self.file_type == 'Origins':
             if key == 'ClassUUID':
                 dtype = 'GuidTableFieldDefinition'
             if key == 'Unique':
                 dtype = 'BoolTableFieldDefinition'
-        if self.ftype == 'Rulebook' and key == 'Weight':
+        if self.file_type == 'Rulebook' and key == 'Weight':
             dtype = 'ModifierTableFieldDefinition'
 
         return dtype
@@ -271,7 +273,7 @@ class LSXconvert():
             return self.data['save']['region'].get('@id', fname)
 
     # Convert to LSF (Modified from BG3ModdingTools)
-    def lsx2lsf(self, file = None, verbose = True):
+    def lsx2lsf(self, file = None, verbose = True, lsfx = False):
         if file is None:
             file = self.file
 
@@ -297,7 +299,14 @@ class LSXconvert():
         conversion_params = ResourceConversionParameters.FromGameVersion(Game.BaldursGate3)
 
         file_path = Path(file)
-        output = file_path.with_suffix(".lsf")
+        trimmed_file_path = file_path
+        # Due to unpacking some files get multiple suffix, so trim duplicates
+        while trimmed_file_path.suffix in {'.lsf', '.lsx'}:
+            trimmed_file_path = trimmed_file_path.with_suffix('')
+        if lsfx:
+            output = trimmed_file_path.with_suffix(".lsfx")
+        else:
+            output = trimmed_file_path.with_suffix(".lsf")
         if output.exists():
             os.remove(output)
 

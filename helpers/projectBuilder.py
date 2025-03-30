@@ -14,8 +14,8 @@ class projectBuilder():
     path_to_templates = None
 
     # Init
-    def __init__(self, path_to_templates: Path):
-        self.conv_lsx = LSXconvert()
+    def __init__(self, path_to_templates: Path, path_to_lslib: Path = None):
+        self.conv_lsx = LSXconvert(lslib_path=path_to_lslib)
         self.path_to_templates = path_to_templates
 
     # Check if path is a workspace resembling a project
@@ -107,15 +107,15 @@ class projectBuilder():
 
                 # Edit paths if lsf file and re-convert
                 try:
-                    ftype = self.conv_lsx.getDataType(nfile)
-                    if not ftype in self.conv_lsx.lsftypes and not ftype in ['IconUVList','TextureAtlasInfo']:
+                    file_type = self.conv_lsx.getDataType(nfile)
+                    if not file_type in self.conv_lsx.lsf_types and not file_type in ['IconUVList', 'TextureAtlasInfo']:
                         continue # Ignore all non lsf files
 
                     with open(nfile, 'r', encoding="utf-8") as f:
                         data = f.read()
 
                     # Visual Resource Generated Path
-                    if ftype in self.conv_lsx.lsftypes:
+                    if file_type in self.conv_lsx.lsf_types:
                         try:
                             loc = re.search(r'Generated/.*?/', data).group().split('/')
                             if not loc[1] == 'Public':
