@@ -54,11 +54,11 @@ run `py Convert2Toolkit.py` to start conversion.
 
 ---
 ## Future Features
--[ ] Add conversion for lsfx --> lsefx
+- [ ] Add conversion for lsfx --> lsefx
 
--[ ] Add conversion for SpellSets.txt
+- [ ] Add conversion for SpellSets.txt
 
--[ ] Add conversion for Rulebooks.lsx
+- [ ] Add conversion for Rulebooks.lsx
 
 
 ---
