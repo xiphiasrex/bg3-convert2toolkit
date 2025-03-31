@@ -10,7 +10,7 @@ from helpers.fixlocale import FixLocale
 from helpers.projectBuilder import projectBuilder
 
 exclusions = ['meta.lsx', 'metadata.lsf.lsx']
-forcefail = ['Rulebook.lsx', 'SpellSet.txt']
+force_fail = ['Rulebook.lsx', 'SpellSet.txt']
 
 def ConvertDB(file, db, converter):
 	if os.path.basename(file) in exclusions:
@@ -75,14 +75,14 @@ if __name__ == "__main__":
 	conv_lsx = LSXconvert(db, path_to_lslib)
 	conv_stats = StatsConvert(db, auxdb)
 	fix_locale = FixLocale()
-	proj_build = projectBuilder(path_to_templates)
+	proj_build = projectBuilder(path_to_templates, path_to_lslib)
 
 	Path("./convert/").mkdir(parents=True, exist_ok=True)
 
 	# Convert Stats
 	print(f'{Fore.CYAN}[main] Converting Stats files:{Fore.RESET}')
 	for file in Path('./convert/').rglob('*.txt'):
-		if os.path.basename(file) in forcefail:
+		if os.path.basename(file) in force_fail:
 			print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(file)} (Reason: Not yet supported){Fore.RESET}')
 			continue
 		ConvertDB(file, db['Stats'], conv_stats)
@@ -90,7 +90,7 @@ if __name__ == "__main__":
 	# Convert LSX
 	print(f'\n{Fore.CYAN}[main] Converting LSX files:{Fore.RESET}')
 	for file in Path('./convert/').rglob('*.lsx'):
-		if os.path.basename(file) in forcefail:
+		if os.path.basename(file) in force_fail:
 			print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(file)} (Reason: Not yet supported){Fore.RESET}')
 			continue
 		ConvertDB(file, db['LSX'], conv_lsx)
@@ -100,7 +100,7 @@ if __name__ == "__main__":
 	for file in Path('./convert/').rglob('*.xml'):
 		if os.path.basename(file)[-8::] == '_fix.xml':
 			continue
-		if os.path.basename(file) in forcefail:
+		if os.path.basename(file) in force_fail:
 			print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(file)} (Reason: Not yet supported){Fore.RESET}')
 			continue
 		fix_locale.fix(file, conv_lsx)
