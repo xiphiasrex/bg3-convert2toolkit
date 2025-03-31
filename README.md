@@ -55,8 +55,18 @@ run `py Convert2Toolkit.py` to start conversion.
 ---
 ## Future Features
 -[ ] Add conversion for lsfx --> lsefx
+
 -[ ] Add conversion for SpellSets.txt
+
 -[ ] Add conversion for Rulebooks.lsx
+
+
+---
+## Troubleshooting/Known Issues
+- The game seems more relaxed than the toolkit in certain regards.  I observed while testing a case where a mod 
+  defined multiple MultiEffectInfos in lsx with the **same** UUID.  The game seemed unconcerned, and the scripts
+  were able to convert.  However, the toolkit MEI editor would crash unless I removed the duplicate.
+
 
 ---
 ## Contributing

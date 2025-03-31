@@ -1,7 +1,6 @@
 import xmltodict
 from pathlib import Path
-from colorama import Fore, Back, Style
-import colorama
+from colorama import Fore
 import json, random
 import os, sys
 
@@ -13,7 +12,8 @@ class LSXconvert():
     auxIDfix = None
     lslib_path = None
 
-    lsf_types = ['Templates', 'SkeletonBank', 'MaterialBank', 'TextureBank', 'VisualBank', 'EffectBank', 'Tags', 'MultiEffectInfos', 'CharacterVisualBank', 'Material', 'MaterialPresetBank']
+    lsf_types = ['Templates', 'SkeletonBank', 'MaterialBank', 'TextureBank', 'VisualBank', 'EffectBank', 'Tags',
+                 'MultiEffectInfos', 'CharacterVisualBank', 'Material', 'MaterialPresetBank', 'PhysicsBank']
 
     # with open('db.json', encoding="utf-8") as f:
     #     backup_db = json.load(f)
@@ -33,7 +33,8 @@ class LSXconvert():
     def convert(self, file):
         self.file = file
         self.readxml(file)
-        return self.writexml(self.convert_all())
+        converted_data, file_path, source_ext, dest_ext = self.convert_all()
+        return self.writexml(converted_data, file_path, source_ext, dest_ext)
     
     # Read data from xml file
     def readxml(self, file):
@@ -43,38 +44,43 @@ class LSXconvert():
         return self.data
 
     # Write data to xml file
-    def writexml(self, data, file = None):
+    def writexml(self, data, file = None, source_ext = '.lsx', dest_est = '.tbl'):
         if file is None:
             file = self.file
         if data is None:
             return False
-        out = file.replace('.lsx', '.tbl')
+        out = file.replace(source_ext, dest_est)
         with open(out, 'w', encoding="utf-8") as f:
             f.write(xmltodict.unparse(data, pretty=True, indent='  '))
         return True
 
     # Convert function logic
     def convert_all(self):
-        fname, fext = os.path.splitext(os.path.basename(self.file))
-
         # Get data type
         self.file_type = self.getDataType()
 
         # Ignore Texture Atlas
         if self.file_type in ['IconUVList', 'TextureAtlasInfo']:
             print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(self.file)} (Reason: Texture atlas doesnt need conversion){Fore.WHITE}')
-            return None
+            return None, None, None, None
 
-        # Ignore VFX
+        # Convert VFX (lsfx.lsx to lsfx)
         if self.file_type in ['Effect','Dependencies']:
             print(f'{Fore.YELLOW}[info] Convert file to lsfx: {os.path.basename(self.file)} (Reason: VFX to lsefx not yet supported){Fore.WHITE}')
             self.lsx2lsf(lsfx=True)
-            return None
+            # TODO: add conversion to lsefx and return
+            return None, None, None, None
 
         # Convert Visual Resource or Templates to LSF
         if self.file_type in self.lsf_types:
             self.lsx2lsf()
-            return None
+            # Convert to .mei file
+            if self.file_type == 'MultiEffectInfos':
+                base_file = self.file.replace('.lsx', '')
+                if not base_file.endswith('.lsf'):
+                    base_file = base_file + '.lsf'
+                return self.build_mei_file(), base_file, '.lsf', '.mei'
+            return None, None, None, None
 
         # Override uuid
         if self.uuid is None:
@@ -101,7 +107,7 @@ class LSXconvert():
             else: # construct xml node
                 t = self.loop_elements(x)
             construct['stats']['stat_objects']['stat_object'].append({'@is_substat': 'false', 'fields': {'field': t}})
-        return construct
+        return construct, None, None, None
 
     # Loop all elements in node
     def loop_elements(self, elem):
@@ -226,6 +232,47 @@ class LSXconvert():
             dtype = 'ModifierTableFieldDefinition'
 
         return dtype
+
+    def build_mei_file(self):
+        root = self.data['save']['region']['node']
+        uuid = ""
+        name = ""
+        for attribute in root['attribute']:
+            if attribute['@id'] == "UUID":
+                uuid = attribute['@value']
+            elif attribute['@id'] == "Name":
+                name = attribute['@value']
+
+        construct = {'MultiEffectInfos': {'@UUID': uuid, '@OwnerUUID': "00000000-0000-0000-0000-000000000000",
+                                          '@Name': name, 'EffectInfos': {'EffectInfo': []}}}
+
+        if isinstance(root['children']['node'], list):
+            for effect_info in root['children']['node']:
+                construct['MultiEffectInfos']['EffectInfos']['EffectInfo'].append(self.build_mei_effect(effect_info))
+        else:
+            construct['MultiEffectInfos']['EffectInfos']['EffectInfo'].append(self.build_mei_effect(root['children']['node']))
+
+        return construct
+
+    def build_mei_effect(self, effect_info):
+        mei_effect = {}
+        for attribute in effect_info['attribute']:
+            value = attribute['@value']
+            if attribute['@type'] == "bool":
+                value = str(value).lower()
+            mei_effect[f'@{attribute['@id']}'] = value
+        if 'children' in effect_info:
+            if isinstance(effect_info['children']['node'], list):
+                for node in effect_info['children']['node']:
+                    multi_id = f'@{node['@id']}'
+                    if multi_id not in mei_effect:
+                        mei_effect[multi_id] = node['attribute']['@value']
+                    else:
+                        mei_effect[multi_id] = ", ".join([mei_effect[multi_id], node['attribute']['@value']])
+            else:
+                multi_id = f'@{effect_info['children']['node']['@id']}'
+                mei_effect[multi_id] = effect_info['children']['node']['attribute']['@value']
+        return mei_effect
 
     # Check if name or file is of guid type
     def is_file_guid(self, file):

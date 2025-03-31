@@ -85,8 +85,8 @@ class projectBuilder():
                 pdest = re.sub(r'/Mods/.*?/', f'/Mods/{pname}/', pdest)
                 pdest = pdest.replace(f'/Stats/Generated/Data/', f'/Stats/')
 
-                # Change destination if table or stats file
-                if Path(fsource).suffix == '.tbl' or Path(fsource).suffix == '.stats':
+                # Change destination if table, stats, or mei file
+                if Path(fsource).suffix == '.tbl' or Path(fsource).suffix == '.stats' or Path(fsource).suffix == '.mei':
                     pdest = pdest.replace(f'/Public/{pname}/', f'/Editor/Mods/{pname}/')
                     pdest = self.translateStructure(pdest, fdest)
 
