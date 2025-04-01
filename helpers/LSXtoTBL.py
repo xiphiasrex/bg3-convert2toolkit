@@ -44,12 +44,16 @@ class LSXconvert():
         return self.data
 
     # Write data to xml file
-    def writexml(self, data, file = None, source_ext = '.lsx', dest_est = '.tbl'):
+    def writexml(self, data, file = None, source_ext = '.lsx', dest_ext = '.tbl'):
         if file is None:
             file = self.file
         if data is None:
             return False
-        out = file.replace(source_ext, dest_est)
+        if source_ext is None:
+            source_ext = '.lsx'
+        if dest_ext is None:
+            dest_ext = '.tbl'
+        out = file.replace(source_ext, dest_ext)
         with open(out, 'w', encoding="utf-8") as f:
             f.write(xmltodict.unparse(data, pretty=True, indent='  '))
         return True
@@ -260,17 +264,17 @@ class LSXconvert():
             value = attribute['@value']
             if attribute['@type'] == "bool":
                 value = str(value).lower()
-            mei_effect[f'@{attribute['@id']}'] = value
+            mei_effect[f'@{attribute["@id"]}'] = value
         if 'children' in effect_info:
             if isinstance(effect_info['children']['node'], list):
                 for node in effect_info['children']['node']:
-                    multi_id = f'@{node['@id']}'
+                    multi_id = f'@{node["@id"]}'
                     if multi_id not in mei_effect:
                         mei_effect[multi_id] = node['attribute']['@value']
                     else:
                         mei_effect[multi_id] = ", ".join([mei_effect[multi_id], node['attribute']['@value']])
             else:
-                multi_id = f'@{effect_info['children']['node']['@id']}'
+                multi_id = f"@{effect_info['children']['node']['@id']}"
                 mei_effect[multi_id] = effect_info['children']['node']['attribute']['@value']
         return mei_effect
 

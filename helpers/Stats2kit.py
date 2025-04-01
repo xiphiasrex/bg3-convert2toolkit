@@ -142,7 +142,8 @@ class StatsConvert():
                 builder['@version'] = "1"
             else: # All normal entries
                 if data[1] == "":
-                    return None
+                    builder['@value'] = ""
+                    builder['@clear_inherited_value'] = "true"
                 if builder['@value'] == '':
                     builder['@value'] = data[1]
             if self.db['DataTypes'].get(data[0], '') == '':
