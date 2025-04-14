@@ -120,6 +120,8 @@ class projectBuilder():
                             loc = re.search(r'Generated/.*?/', data).group().split('/')
                             if not loc[1] == 'Public':
                                 data = data.replace('Generated/', f'Generated/Public/{pname}/')
+                            else:
+                                data = data.replace('Generated/Public/', f'Generated/Public/{pname}/')
                         except Exception as e:
                             pass # Ignore outlier files
                     # UI Resource Public Path

@@ -103,7 +103,8 @@
         "LightbarSounds": "35e499a2-b380-4d2f-806f-be28491e5725",
         "ItemWallTemplates": "6ae562ce-9a5d-4f2c-8a07-058940f519c8",
         "TadpolePowersTree": "ff9163fe-edf5-4ff8-bd9d-d211eb24c28b",
-        "VisualLocatorAttachments": ""
+        "VisualLocatorAttachments": "4cdc0138-bc29-4cce-ab87-af73c80617c7",
+        "OneTimeRewards": "951f7f7e-76f6-4ec5-96a7-61312b04e58c"
     },
     "Stats": {
         "Shout": "9fd4ac7a-fad7-424f-83df-0893eae93c38",
@@ -1316,6 +1317,8 @@
         "StatusType": "",
         "MinLevelDiff": "IntegerTableFieldDefinition",
         "MaxLevelDiff": "IntegerTableFieldDefinition",
-        "InterruptFlags": "EnumerationListTableFieldDefinition"
+        "InterruptFlags": "EnumerationListTableFieldDefinition",
+        "Amount": "IntegerTableFieldDefinition",
+        "ItemTemplateId": "FixedStringTableFieldDefinition"
     }
 }
