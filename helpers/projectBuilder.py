@@ -83,15 +83,15 @@ class projectBuilder():
 
                 pdest = re.sub(r'/Public/.*?/', f'/Public/{pname}/', pdest)
                 pdest = re.sub(r'/Mods/.*?/', f'/Mods/{pname}/', pdest)
-                pdest = pdest.replace(f'/Stats/Generated/Data/', f'/Stats/')
 
                 # Change destination if table, stats, or mei file
                 if Path(fsource).suffix == '.tbl' or Path(fsource).suffix == '.stats' or Path(fsource).suffix == '.mei':
+                    pdest = re.sub(r'/Stats/Generated/(Data/)?', f'/Stats/', pdest)
                     pdest = pdest.replace(f'/Public/{pname}/', f'/Editor/Mods/{pname}/')
                     pdest = self.translateStructure(pdest, fdest)
 
                 # Fix destination if generated
-                if '/Generated/' in pdest and not '/Generated/Public/' in pdest and not '/Stats/Generated/Data/' in pdest:
+                if '/Generated/' in pdest and not '/Generated/Public/' in pdest and not '/Stats/Generated/' in pdest:
                     pdest = pdest.replace('/Generated/', f'/Generated/Public/{pname}/')
 
                 # Fix localization
@@ -206,24 +206,54 @@ class projectBuilder():
         paths = {
             "/Stats/Generated/Data/": "/Stats/",
         }
+
         files = {
+            "BloodTypes.stats": "/BloodTypes/",
+            "CriticalHitTypes.stats": "/BloodTypes/",
+            "Crimes.stats": "/Crimes/",
+            "Equipment.stats": "/Equipment/",
+            "Data.stats": "/ExtraData/",
+            "Requirements.stats": "/ExtraData/",
+            "XPData.stats": "/ExtraData/",
+            "ItemColor.stats": "/ItemColor/",
+            "CraftingStationsItemComboPreviewData.stats": "/ItemCombos/",
+            "ItemComboProperties.stats": "/ItemCombos/",
+            "ItemCombos.stats": "/ItemCombos/",
+            "ObjectCategoriesItemComboPreviewData.stats": "/ItemCombos/",
+            "ItemProgressionNames.stats": "/ItemProgression/",
+            "ItemProgressionVisuals.stats": "/ItemProgression/",
+            "ItemTypes.stats": "/ItemTypes/",
+            "Projectile.stats": "/SpellData/",
+            "ProjectileStrike.stats": "/SpellData/",
+            "Rush.stats": "/SpellData/",
+            "Shout.stats": "/SpellData/",
+            "SpellSet.stats": "/SpellData/",
+            "Target.stats": "/SpellData/",
+            "Teleportation.stats": "/SpellData/",
+            "Throw.stats": "/SpellData/",
+            "Wall.stats": "/SpellData/",
+            "Zone.stats": "/SpellData/",
+            "Armor.stats": "/Stats/",
             "Character.stats": "/Stats/",
             "Interrupt.stats": "/Stats/",
+            "Object.stats": "/Stats/",
             "Passive.stats": "/Stats/",
             "Weapon.stats": "/Stats/",
             "Status_BOOST.stats": "/StatusData/",
+            "Status_DEACTIVATED.stats": "/StatusData/",
             "Status_DOWNED.stats": "/StatusData/",
+            "Status_EFFECT.stats": "/StatusData/",
+            "Status_FEAR.stats": "/StatusData/",
+            "Status_HEAL.stats": "/StatusData/",
+            "Status_INCAPACITATED.stats": "/StatusData/",
             "Status_INVISIBLE.stats": "/StatusData/",
+            "Status_KNOCKED_DOWN.stats": "/StatusData/",
             "Status_POLYMORPHED.stats": "/StatusData/",
             "Status_SNEAKING.stats": "/StatusData/",
-            "Projectile.stats": "/SpellData/",
-            "Rush.stats": "/SpellData/",
-            "Shout.stats": "/SpellData/",
-            "Target.stats": "/SpellData/",
-            "Teleportation.stats": "/SpellData/",
-            "Zone.stats": "/SpellData/",
-            "Equipment.stats": "/Equipment/",
+            "TreasureGroups.stats": "/TreasureTable/",
+            "TreasureTable.stats": "/TreasureTable/",
         }
+
         for key, val in paths.items():
             dirs = dirs.replace(key, val)
         for key, val in files.items():
