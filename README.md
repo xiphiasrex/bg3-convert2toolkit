@@ -20,6 +20,61 @@ You need to paste the <b>contents</b> of the new `/NewMod_uuid/` folder into you
 
 
 ---
+## File structure for project Stats conversion
+If converting to a toolkit project, the generated data needs to conform to expected file name to be correctly
+structured in the editor project.
+
+Expected file names (note not all types may be supported currently)
+```
+\Public\[Modname]\Stats\Generated\
+├── Data
+│   ├── Armor.txt
+│   ├── BloodTypes.txt
+│   ├── Character.txt
+│   ├── Crimes.lsx
+│   ├── CriticalHitTypes.txt
+│   ├── Data.txt
+│   ├── Interrupt.txt
+│   ├── ItemColor.txt
+│   ├── ItemProgressionNames.txt
+│   ├── ItemProgressionVisuals.txt
+│   ├── Object.txt
+│   ├── Passive.txt
+│   ├── Requirements.txt
+│   ├── Spell_Projectile.txt
+│   ├── Spell_ProjectileStrike.txt
+│   ├── Spell_Rush.txt
+│   ├── Spell_Shout.txt
+│   ├── Spell_Target.txt
+│   ├── Spell_Teleportation.txt
+│   ├── Spell_Throw.txt
+│   ├── Spell_Wall.txt
+│   ├── Spell_Zone.txt
+│   ├── Status_BOOST.txt
+│   ├── Status_DEACTIVATED.txt
+│   ├── Status_DOWNED.txt
+│   ├── Status_EFFECT.txt
+│   ├── Status_FEAR.txt
+│   ├── Status_HEAL.txt
+│   ├── Status_INCAPACITATED.txt
+│   ├── Status_INVISIBLE.txt
+│   ├── Status_KNOCKED_DOWN.txt
+│   ├── Status_POLYMORPHED.txt
+│   ├── Status_SNEAKING.txt
+│   ├── Weapon.txt
+│   └── XPData.txt
+├── CraftingStationsItemComboPreviewData.txt
+├── Equipment.txt
+├── ItemComboProperties.txt
+├── ItemCombos.txt
+├── ItemTypes.txt
+├── ObjectCategoriesItemComboPreviewData.txt
+├── SpellSet.txt
+├── TreasureGroups.txt
+├── TreasureTable.txt
+```
+
+---
 ## Settings
 - `bg3path`
   - Path to BG3 installation
