@@ -76,16 +76,18 @@ class StatsConvert():
                         i = 0
                     dupes = []
                     newUID = self.genUUID()
-                    nameval = raw[0].replace(f'{os.path.basename(self.file).split(".")[0].replace("Spell_","")}_', '')
+                    stat_name = raw[0]
+                    if os.path.basename(self.file).startswith("Spell_"):
+                        stat_name = raw[0].replace(f'{os.path.basename(self.file).split(".")[0].replace("Spell_","")}_', '')
 
                     fname, fext = os.path.splitext(os.path.basename(self.file).replace("Spell_",""))
                     if fname == "Projectile" or fname == "Target" or fname == "Zone" or fname == "Shout" or fname == "ProjectileStrike" or fname == "Rush" or fname == "Teleportation" or fname == "Throw":
-                        auxIDfix[f'{fname}_{nameval}'] = newUID
+                        auxIDfix[f'{fname}_{stat_name}'] = newUID
                     else:
-                        auxIDfix[nameval] = newUID
+                        auxIDfix[stat_name] = newUID
 
                     t.append({'@name': 'UUID', '@type': 'IdTableFieldDefinition', '@value': newUID})
-                    t.append({'@name': 'Name', '@type': 'NameTableFieldDefinition', '@value': nameval})
+                    t.append({'@name': 'Name', '@type': 'NameTableFieldDefinition', '@value': stat_name})
                     continue
                 if line[:5:] == "using": # Skip parent if IDs not in aux db
                     t.append({'@name': 'Using', '@type': 'BaseClassTableFieldDefinition', '@value': self.auxdb.get(raw[0],raw[0])})
