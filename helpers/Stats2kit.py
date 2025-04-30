@@ -78,7 +78,7 @@ class StatsConvert():
                     newUID = self.genUUID()
                     stat_name = raw[0]
                     if os.path.basename(self.file).startswith("Spell_"):
-                        stat_name = raw[0].replace(f'{os.path.basename(self.file).split(".")[0].replace("Spell_","")}_', '')
+                        stat_name = raw[0].removeprefix(f'{os.path.basename(self.file).split(".")[0].replace("Spell_","")}_')
 
                     fname, fext = os.path.splitext(os.path.basename(self.file).replace("Spell_",""))
                     if fname == "Projectile" or fname == "Target" or fname == "Zone" or fname == "Shout" or fname == "ProjectileStrike" or fname == "Rush" or fname == "Teleportation" or fname == "Throw":
