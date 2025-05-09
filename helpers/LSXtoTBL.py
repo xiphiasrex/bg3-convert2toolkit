@@ -14,6 +14,7 @@ class LSXconvert():
 
     lsf_types = ['Templates', 'SkeletonBank', 'MaterialBank', 'TextureBank', 'VisualBank', 'EffectBank', 'Tags',
                  'MultiEffectInfos', 'CharacterVisualBank', 'Material', 'MaterialPresetBank', 'PhysicsBank']
+    null_ref = "00000000-0000-0000-0000-000000000000"
 
     # with open('db.json', encoding="utf-8") as f:
     #     backup_db = json.load(f)
@@ -68,12 +69,13 @@ class LSXconvert():
             print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(self.file)} (Reason: Texture atlas doesnt need conversion){Fore.WHITE}')
             return None, None, None, None
 
-        # Convert VFX (lsfx.lsx to lsfx)
+        # Convert VFX (lsfx.lsx to lsfx and lsefx editor file)
         if self.file_type in ['Effect','Dependencies']:
-            print(f'{Fore.YELLOW}[info] Convert file to lsfx: {os.path.basename(self.file)} (Reason: VFX to lsefx not yet supported){Fore.WHITE}')
             self.lsx2lsf(lsfx=True)
-            # TODO: add conversion to lsefx and return
-            return None, None, None, None
+            base_file = self.file.replace('.lsx', '')
+            if not base_file.endswith('.lsfx'):
+                base_file = base_file + '.lsfx'
+            return self.convert_lsfx_lsefx(), base_file, '.lsfx', '.lsefx'
 
         # Convert Visual Resource or Templates to LSF
         if self.file_type in self.lsf_types:
@@ -277,6 +279,77 @@ class LSXconvert():
                 multi_id = f"@{effect_info['children']['node']['@id']}"
                 mei_effect[multi_id] = effect_info['children']['node']['attribute']['@value']
         return mei_effect
+
+    def convert_lsfx_lsefx(self):
+        root = self.data['save']['region']['node']
+        effect = None
+
+        if isinstance(root, list):
+            for region in root:
+                if region['@id'] == "Effect":
+                    effect = region['node']
+        else:
+            if root['@id'] == "Effect":
+                effect = root['node']
+
+        if not effect:
+            print(f'{Fore.YELLOW}[info] No Effect region for lsfx conversion: {self.file}{Fore.RESET}')
+            raise Exception('lsfx conversion impossible')
+
+        construct = {'effect': {'@version': '0.0', '@effectversion': "1.0.0", '@id': self.null_ref,
+                                'phases': {'phase': []}, 'colors': {'color': []}, 'trackgroups': {'trackgroup': []}}}
+
+        # Duration
+        duration = 0.0
+        if 'attribute' in effect and effect['attribute']['@id'] == "Duration":
+            duration = effect['attribute']['@value']
+
+        # Get Effect, Inputs, and Phases
+        effect_components = None
+        inputs = None
+        phases = None
+        if 'children' in effect:
+            if isinstance(effect['children']['node'], list):
+                for node in effect['children']['node']:
+                    if node['@id'] == "EffectComponents":
+                        effect_components = node
+                    elif node['@id'] == "Inputs":
+                        inputs = node
+                    elif node['@id'] == "Phases":
+                        phases = node
+            else:
+                if effect['children']['node']['@id'] == "EffectComponents":
+                    effect_components = effect['children']['node']
+                elif effect['children']['node']['@id'] == "Inputs":
+                    inputs = effect['children']['node']
+                elif effect['children']['node']['@id'] == "Phases":
+                    phases = effect['children']['node']
+
+        # Inputs
+
+        # Phases
+        if phases and 'children' in phases:
+            if isinstance(phases['children']['node'], list):
+                for phase in phases['children']['node']:
+                    construct['effect']['phases']['phase'].append(self.build_lsefx_phase(phase))
+            else:
+                construct['effect']['phases']['phase'].append(self.build_lsefx_phase(phases['children']['node']))
+
+        # EffectComponents
+
+
+
+
+        return construct
+
+    def build_lsefx_inputs(self, lsfx_input):
+        lsefx_input = {'object': {'@class': "", '@classid': self.null_ref, '@assembly': "", 'data': {}}}
+        pass
+
+    def build_lsefx_phase(self, lsfx_phase):
+        lsefx_phase = {'object': {'@class': "", '@classid': self.null_ref, '@assembly': "", 'data': {}}}
+
+        return lsefx_phase
 
     # Check if name or file is of guid type
     def is_file_guid(self, file):
