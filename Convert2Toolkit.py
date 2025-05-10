@@ -86,7 +86,7 @@ if __name__ == "__main__":
 		if os.path.basename(file) in force_fail:
 			print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(file)} (Reason: Not yet supported){Fore.RESET}')
 			continue
-		elif file.match('**/Mods/*/Story/**') or file.match('**/Mods/*/Story/RawFiles/Goals/*'):
+		elif file.full_match('**/Mods/*/Story/**'):
 			print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(file)} (Reason: Osiris Script){Fore.RESET}')
 			continue
 		ConvertDB(file, db['Stats'], conv_stats)
