@@ -1,7 +1,8 @@
-from pathlib import Path
-from colorama import Fore
 import json
 import os
+from pathlib import Path
+
+from colorama import Fore
 
 from helpers.LSXtoTBL import LSXconvert
 from helpers.Stats2kit import StatsConvert
@@ -84,6 +85,9 @@ if __name__ == "__main__":
 	for file in Path('./convert/').rglob('*.txt'):
 		if os.path.basename(file) in force_fail:
 			print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(file)} (Reason: Not yet supported){Fore.RESET}')
+			continue
+		elif file.match('**/Mods/*/Story/**') or file.match('**/Mods/*/Story/RawFiles/Goals/*'):
+			print(f'{Fore.YELLOW}[info] Skipped file: {os.path.basename(file)} (Reason: Osiris Script){Fore.RESET}')
 			continue
 		ConvertDB(file, db['Stats'], conv_stats)
 
