@@ -1,10 +1,10 @@
-import xmltodict
-import random
-from pathlib import Path
-from colorama import Fore, Back, Style
-import colorama
 import json
 import os
+import uuid
+
+import xmltodict
+from colorama import Fore
+
 
 class StatsConvert():
     data = None
@@ -75,7 +75,7 @@ class StatsConvert():
                         t = []
                         i = 0
                     dupes = []
-                    newUID = self.genUUID()
+                    newUID = self.gen_uuid()
                     stat_name = raw[0]
                     if os.path.basename(self.file).startswith("Spell_"):
                         stat_name = raw[0].removeprefix(f'{os.path.basename(self.file).split(".")[0].replace("Spell_","")}_')
@@ -164,14 +164,8 @@ class StatsConvert():
             return None
 
     # Generate a new UUID
-    def genUUID(self):
-        uuid = ""
-        for i in range(36):
-            if i == 8 or i == 13 or i == 18 or i == 23:
-                uuid += "-"
-            else:
-                uuid += random.choice("abcdef0123456789")
-        return uuid
+    def gen_uuid(self) -> str:
+        return str(uuid.uuid4())
 
     # Check if a given string is a valid GUID
     def is_guid(self, val):
@@ -205,7 +199,7 @@ class StatsConvert():
             # Initialize new field section for new table
             if line.startswith("new treasuretable"):
                 has_subtable = False
-                base_table_uuid = self.genUUID()
+                base_table_uuid = self.gen_uuid()
                 base_table_name = tokens[2].strip('"')
                 t.append({'@name': 'UUID', '@type': 'IdTableFieldDefinition', '@value': base_table_uuid})
                 t.append({'@name': 'Name', '@type': 'NameTableFieldDefinition', '@value': base_table_name})
@@ -216,7 +210,7 @@ class StatsConvert():
                     builder = self.gen_dict(["Using", base_table_uuid])
                     if not builder is None:
                         t.append(builder)
-                    t.append({'@name': 'UUID', '@type': 'IdTableFieldDefinition', '@value': self.genUUID()})
+                    t.append({'@name': 'UUID', '@type': 'IdTableFieldDefinition', '@value': self.gen_uuid()})
                     t.append({'@name': 'Name', '@type': 'NameTableFieldDefinition', '@value': str(base_table_name + '_substat')})
                 else:
                     has_subtable = True

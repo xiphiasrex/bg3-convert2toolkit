@@ -1,8 +1,12 @@
-import xmltodict
+import json
+import os
+import sys
+import uuid
 from pathlib import Path
+
+import xmltodict
 from colorama import Fore
-import json, random
-import os, sys
+
 
 class LSXconvert():
     data = None
@@ -120,7 +124,7 @@ class LSXconvert():
             t = self.loop_builder(t, akey, aval)
 
         if self.lastName == '':
-            self.lastName = self.genUUID()
+            self.lastName = self.gen_uuid()
         if not self.nodeHasEntry(t, 'NameFS'):
             t.append({'@name':'NameFS','@type':'FixedStringTableFieldDefinition','@value':self.lastName})
         if not self.nodeHasEntry(t, 'Name'):
@@ -291,14 +295,8 @@ class LSXconvert():
         except IndexError:
             return default
 
-    def genUUID(self):
-        uuid = ""
-        for i in range(36):
-            if i == 8 or i == 13 or i == 18 or i == 23:
-                uuid += "-"
-            else:
-                uuid += random.choice("abcdef0123456789")
-        return uuid
+    def gen_uuid(self) -> str:
+        return str(uuid.uuid4())
 
     # Check if node contains element
     def nodeHasEntry(self, node, entry):
@@ -344,8 +342,8 @@ class LSXconvert():
             sys.path.append(str(lslib_dll.parent.absolute()))
         clr.AddReference("LSLib")
         from LSLib.LS import ResourceUtils, ResourceConversionParameters, ResourceLoadParameters
-        from LSLib.LS.Enums import Game, ResourceFormat
-        
+        from LSLib.LS.Enums import Game
+
         load_params = ResourceLoadParameters.FromGameVersion(Game.BaldursGate3)
         conversion_params = ResourceConversionParameters.FromGameVersion(Game.BaldursGate3)
 

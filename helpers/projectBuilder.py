@@ -1,11 +1,13 @@
-from pathlib import Path
-from colorama import Fore, Back, Style
-import colorama
-import os, re
+import os
+import re
 import shutil
-import random
+import uuid
+from pathlib import Path
+
+from colorama import Fore
 
 from helpers.LSXtoTBL import LSXconvert
+
 
 class projectBuilder():
     data = None
@@ -48,7 +50,7 @@ class projectBuilder():
             return False
 
         # Vars
-        pguid = self.genUUID()
+        pguid = self.gen_uuid()
         pname = ''.join(x for x in f'{pname_raw}_{pguid}' if x.isalnum() or x in ['_','-','(',')'])
         pdir = f'./convert/{pname}/'
 
@@ -155,7 +157,7 @@ class projectBuilder():
             data = f.read()
 
         data = data.replace('$MODULE_ID', pguid)
-        data = data.replace('$PROJECT_ID', self.genUUID())
+        data = data.replace('$PROJECT_ID', self.gen_uuid())
         data = data.replace('$PROJECT_NAME', self.xmlesc(pname_raw))
 
         with open(f'{pdir}/Projects/{pname}/meta.lsx', 'w', encoding="utf-8") as f:
@@ -175,14 +177,8 @@ class projectBuilder():
         return True
 
     # Generate a new UUID
-    def genUUID(self):
-        uuid = ""
-        for i in range(36):
-            if i == 8 or i == 13 or i == 18 or i == 23:
-                uuid += "-"
-            else:
-                uuid += random.choice("abcdef0123456789")
-        return uuid
+    def gen_uuid(self) -> str:
+        return str(uuid.uuid4())
 
     # Check if a given string is a valid GUID
     def is_guid(self, val):
