@@ -164,8 +164,6 @@
             "Type": "RulesetType",
             "RewardType": "RewardType",
             "AvailableInCharacterCreation": "CharacterCreatorAvailabilityType",
-            "PassivesInheritanceType": "ShapeshiftInheritanceType",
-            "ResistancesInheritanceType": "ShapeshiftInheritanceType",
             "Audible": "DisturbanceYesNoIgnoreStats",
             "Continuous": "YesNo",
             "CreatesCrimescene": "YesNo",
@@ -215,6 +213,8 @@
             "SlotName": "CharacterCreatorSlotNames",
             "UnlockType": "UnlockType",
             "ErrorDescriptionType": "ErrorDescriptionType",
+            "PassivesInheritanceType": "ShapeshiftInheritanceType",
+            "ResistancesInheritanceType": "ShapeshiftInheritanceType",
             "SpellCastingAbilityInheritanceType": "ShapeshiftInheritanceTypeNoMerge",
             "BloodSurfaceTypeInheritanceType": "ShapeshiftInheritanceTypeNoMerge",
             "HitBloodTypeInheritanceType": "ShapeshiftInheritanceTypeNoMerge",
@@ -222,6 +222,8 @@
             "DefaultBoostsInheritanceType": "ShapeshiftInheritanceType",
             "DifficultyStatusesInheritanceType": "ShapeshiftInheritanceType",
             "PersonalStatusImmunitiesInheritanceType": "ShapeshiftInheritanceType",
+            "FlagsInheritanceType": "ShapeshiftInheritanceType",
+            "ProficiencyGroupsInheritanceType": "ShapeshiftInheritanceType",
             "AlchemyCombinationType": "AlchemyCombinationType",
             "Type 4": "IngredientType",
             "Combine 4": "IngredientCombineType",
@@ -289,7 +291,11 @@
             "Weapon Properties": "WeaponFlags",
             "Proficiency Group": "ProficiencyGroupFlags",
             "ValueOverride": "YesNo",
-            "InterruptFlags": "InterruptFlagsList"
+            "InterruptFlags": "InterruptFlagsList",
+            "ActionCapabilities": "ActionsCapabilities",
+            "InteractionsCapabilities": "InteractionsCapabilities",
+            "AwarenessCapabilities": "AwarenessCapabilities",
+            "SpeakingCapabilities": "SpeakingCapabilities"
         },
         "EnumSubTypes": {
             "PrimaryAbility": {"1":"Strength","2":"Dexterity","3":"Constitution","4":"Intelligence","5":"Wisdom","6":"Charisma"},
@@ -306,8 +312,6 @@
             "Type": "RulesetType",
             "RewardType": "RewardType",
             "AvailableInCharacterCreation": {"0":"Unavailable","1":"Available","2":"Hidden"},
-            "PassivesInheritanceType": "ShapeshiftInheritanceType",
-            "ResistancesInheritanceType": "ShapeshiftInheritanceType",
             "Audible": "DisturbanceYesNoIgnoreStats",
             "Continuous": "YesNo",
             "CreatesCrimescene": "YesNo",
@@ -357,6 +361,8 @@
             "SlotName": "CharacterCreatorSlotNames",
             "UnlockType": "UnlockType",
             "ErrorDescriptionType": {"0":"ErrorName","1":"ErrorStringData"},
+            "PassivesInheritanceType": "ShapeshiftInheritanceType",
+            "ResistancesInheritanceType": "ShapeshiftInheritanceType",
             "SpellCastingAbilityInheritanceType": "ShapeshiftInheritanceTypeNoMerge",
             "BloodSurfaceTypeInheritanceType": "ShapeshiftInheritanceTypeNoMerge",
             "HitBloodTypeInheritanceType": "ShapeshiftInheritanceTypeNoMerge",
@@ -364,6 +370,8 @@
             "DefaultBoostsInheritanceType": "ShapeshiftInheritanceType",
             "DifficultyStatusesInheritanceType": "ShapeshiftInheritanceType",
             "PersonalStatusImmunitiesInheritanceType": "ShapeshiftInheritanceType",
+            "FlagsInheritanceType": "ShapeshiftInheritanceType",
+            "ProficiencyGroupsInheritanceType": "ShapeshiftInheritanceType",
             "AlchemyCombinationType": "AlchemyCombinationType",
             "Type 4": "IngredientType",
             "Combine 4": "IngredientCombineType",
@@ -1319,6 +1327,8 @@
         "MaxLevelDiff": "IntegerTableFieldDefinition",
         "InterruptFlags": "EnumerationListTableFieldDefinition",
         "Amount": "IntegerTableFieldDefinition",
-        "ItemTemplateId": "FixedStringTableFieldDefinition"
+        "ItemTemplateId": "FixedStringTableFieldDefinition",
+        "ProficiencyGroupsInheritanceType": "EnumerationTableFieldDefinition",
+        "FlagsInheritanceType": "EnumerationTableFieldDefinition"
     }
 }

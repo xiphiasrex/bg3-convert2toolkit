@@ -8,6 +8,20 @@ import xmltodict
 from colorama import Fore
 
 
+def map_modifier_type(attribute_type: str) -> str:
+    if attribute_type == "1":
+        return "Add"
+    elif attribute_type == "2":
+        return "Multiply"
+    elif attribute_type == "3":
+        return "Override"
+    elif attribute_type == "4":
+        return "Template"
+    else:
+        print(f'{Fore.YELLOW}[info] Unknown modifier type in Rulebook [{attribute_type}] {Fore.RESET}')
+        return attribute_type
+
+
 class LSXconvert():
     data = None
     file = None
@@ -125,9 +139,9 @@ class LSXconvert():
 
         if self.lastName == '':
             self.lastName = self.gen_uuid()
-        if not self.nodeHasEntry(t, 'NameFS'):
+        if not self.node_has_entry(t, 'NameFS'):
             t.append({'@name':'NameFS','@type':'FixedStringTableFieldDefinition','@value':self.lastName})
-        if not self.nodeHasEntry(t, 'Name'):
+        if not self.node_has_entry(t, 'Name'):
             t.append({'@name':'Name','@type':'NameTableFieldDefinition','@value':self.lastName})
         self.lastName = ''
         return t
@@ -159,12 +173,64 @@ class LSXconvert():
                     t = self.loop_builder(t, ax['@id'], 'children', ax['children'])
                     continue
                 if builder.get(ax['@id'], None) is None:
-                    builder[ax['@id']] = {'@name': ax['@id'], '@type': self.gen_dict_keytype(ax['@id']), '@value': f'{ax["attribute"]["@value"]}'}
+                    tbl_type = self.gen_dict_keytype(ax['@id'])
+                    attribute_type, attribute_value = self.get_type_value(ax)
+
+                    if tbl_type == "ModifierTableFieldDefinition":
+                        attribute_type = map_modifier_type(attribute_type)
+                        builder[ax['@id']] = {'@name': ax['@id'], '@type': self.gen_dict_keytype(ax['@id']), 'modifier': {'@value': attribute_value, '@type': attribute_type}}
+                    elif tbl_type == "EnumerationListTableFieldDefinition":
+                        pass
+                    else:
+                        builder[ax['@id']] = {'@name': ax['@id'], '@type': self.gen_dict_keytype(ax['@id']), '@value': attribute_value}
+
                 else:
                     builder[ax['@id']]['@value'] = f'{builder[ax["@id"]]["@value"]};{ax["attribute"]["@value"]}'
             for ax, bx in builder.items():
                 t.append(bx)
+        elif self.file_type == 'Rulebook' and aval == 'children':
+            if akey == 'AbilityChanges':
+                abilities_data = self.node_get_entry(t, 'Abilities')
+
+                if not abilities_data:
+                    abilities_data = {'@name':'Abilities', '@type':self.gen_dict_keytype('Abilities'), 'value': {'modifier': []}}
+                    t.append(abilities_data)
+
+                attribute_type, attribute_value = self.get_type_value(lnode['node'])
+                attribute_type = map_modifier_type(attribute_type)
+                abilities_data['value']['modifier'].append({'@value': attribute_value, '@type': attribute_type})
+            else:
+                # :-(
+                if akey == 'ActionsCapabilities':
+                    akey = 'ActionCapabilities'
+
+                node_type = self.gen_dict_keytype(akey)
+                if isinstance(lnode['node'], list):
+                    items = lnode['node']
+                else:
+                    items = [lnode['node']]
+
+                value_list = []
+                for item in items:
+                    value_list.append(item['attribute']['@value'])
+
+                t.append({'@name':akey, '@type':node_type, '@enumeration_type_name':self.db['DataTypes']['EnumTypes'].get(akey), '@version': '1', '@value':";".join(value_list)})
+
         return t
+
+    def get_type_value(self, attributes):
+        if isinstance(attributes["attribute"], list):
+            attributes = attributes["attribute"]
+        else:
+            attributes = [attributes["attribute"]]
+        attribute_type = ""
+        attribute_value = ""
+        for attribute in attributes:
+            if attribute['@id'] == "type":
+                attribute_type = attribute['@value']
+            elif attribute['@id'] in ["Name", "Object", "value"]:
+                attribute_value = attribute['@value']
+        return attribute_type, attribute_value
 
     # Generate dict lsx node from xml node
     def gen_dict(self, node):
@@ -185,6 +251,10 @@ class LSXconvert():
                             val = 'DefaultValues'
                     if fname == 'ClassDescriptions' and val == 'ParentGuid':
                         val = 'ParentUUID'
+                    if fname == 'Rulebook':
+                        # Larian please, I beg you...
+                        if val == 'ChangeScript':
+                            val = 'ScriptName'
 
                     ndict['@name'] = val
                     continue
@@ -236,8 +306,10 @@ class LSXconvert():
                 dtype = 'GuidTableFieldDefinition'
             if key == 'Unique':
                 dtype = 'BoolTableFieldDefinition'
-        if self.file_type == 'Rulebook' and key == 'Weight':
+        if self.file_type == 'Rulebook' and key in ['Weight', 'Hp', 'TemporaryHp', 'Scale']:
             dtype = 'ModifierTableFieldDefinition'
+        if self.file_type == 'Rulebook' and key in ['Abilities']:
+            dtype = 'ModifierListTableFieldDefinition'
 
         return dtype
 
@@ -299,7 +371,7 @@ class LSXconvert():
         return str(uuid.uuid4())
 
     # Check if node contains element
-    def nodeHasEntry(self, node, entry):
+    def node_has_entry(self, node, entry):
         try:
             for x in node:
                 if x.get('@name', None) == entry:
@@ -307,6 +379,16 @@ class LSXconvert():
             return False
         except Exception:
             return False
+
+    # Get entry from node
+    def node_get_entry(self, node, entry):
+        try:
+            for x in node:
+                if x.get('@name', None) == entry:
+                    return x
+            return None
+        except Exception:
+            return None
 
     def getDataType(self, file = None):
         if not file is None:
@@ -340,9 +422,9 @@ class LSXconvert():
         import clr
         if not str(lslib_dll.parent.absolute()) in sys.path:
             sys.path.append(str(lslib_dll.parent.absolute()))
-        clr.AddReference("LSLib")
-        from LSLib.LS import ResourceUtils, ResourceConversionParameters, ResourceLoadParameters
-        from LSLib.LS.Enums import Game
+        clr.AddReference("LSLib")  # type: ignore
+        from LSLib.LS import ResourceUtils, ResourceConversionParameters, ResourceLoadParameters  # type: ignore
+        from LSLib.LS.Enums import Game  # type: ignore
 
         load_params = ResourceLoadParameters.FromGameVersion(Game.BaldursGate3)
         conversion_params = ResourceConversionParameters.FromGameVersion(Game.BaldursGate3)

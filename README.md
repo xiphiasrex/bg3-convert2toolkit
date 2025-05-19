@@ -2,7 +2,7 @@
 ### Convert a third party Mod project to a Toolkit project
 For use when porting third party mods to the toolkit or when you lost your editor files.
 
-If you dropped an entire mod into the conversion folder it will try to setup a project to be used with the toolkit.
+If you dropped an entire mod into the conversion folder it will try to set up a project to be used with the toolkit.
 
 If you get any errors about files not existing you probably need to <b>enable long path names</b>.
 
@@ -21,7 +21,7 @@ You need to paste the <b>contents</b> of the new `/NewMod_uuid/` folder into you
 
 ---
 ## File structure for project Stats conversion
-If converting to a toolkit project, the generated data needs to conform to expected file name to be correctly
+If converting to a toolkit project, the generated data needs to conform to expected file names to be correctly
 structured in the editor project.
 
 Expected file names (note not all types may be supported currently)
@@ -113,7 +113,11 @@ run `py Convert2Toolkit.py` to start conversion.
 
 - [ ] Add conversion for SpellSets.txt
 
-- [ ] Add conversion for Rulebooks.lsx
+- [X] Add conversion for Rulebooks.lsx
+
+- [ ] Add support for direct conversion of pak files
+
+- [ ] Add GUI version of converter
 
 
 ---
