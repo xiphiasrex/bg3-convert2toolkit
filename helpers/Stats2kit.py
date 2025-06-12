@@ -1,6 +1,7 @@
 import json
 import os
 import uuid
+from pathlib import Path
 
 import xmltodict
 from colorama import Fore
@@ -12,11 +13,13 @@ class StatsConvert():
     uuid = None
     db = None
     auxdb = None
+    root_path = None
 
     # Init
-    def __init__(self, db=None, auxdb=None):
+    def __init__(self, db=None, auxdb=None, root_path: Path = None):
         self.db = db
         self.auxdb = auxdb
+        self.root_path = root_path
 
     def setUUID(self, uuid=None):
         self.uuid = uuid
@@ -121,7 +124,7 @@ class StatsConvert():
                         isRecovered = False
         if not isRecovered:
             print(f'{Fore.YELLOW}[stats] Missing parent entries in: {os.path.basename(self.file)}{Fore.WHITE}')
-        with open('auxdb_self_recovered.temp', 'w') as f:
+        with open(self.root_path / 'auxdb_self_recovered.temp', 'w') as f:
             f.write(json.dumps(auxIDfix, indent=4))
         return construct
 
