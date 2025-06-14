@@ -29,6 +29,7 @@ class LSXconvert():
     db = None
     auxIDfix = None
     lslib_path = None
+    root_path = None
 
     lsf_types = ['Templates', 'SkeletonBank', 'MaterialBank', 'TextureBank', 'VisualBank', 'EffectBank', 'Tags',
                  'MultiEffectInfos', 'CharacterVisualBank', 'Material', 'MaterialPresetBank', 'PhysicsBank']
@@ -39,10 +40,11 @@ class LSXconvert():
     lastName = ''
 
     # Init
-    def __init__(self, db = None, lslib_path = None):
+    def __init__(self, db = None, lslib_path = None, root_path: Path = None):
         self.file_type = None
         self.db = db
         self.lslib_path = lslib_path
+        self.root_path = root_path
 
     def setUUID(self, uuid = None):
         self.uuid = uuid
@@ -115,7 +117,7 @@ class LSXconvert():
         construct = {'stats': {'@stat_object_definition_id': nodeUUID, 'stat_objects': {'stat_object': []}}}
 
         try: # Try adding recovered entries to auxiliary db
-            with open('auxdb_self_recovered.temp', encoding="utf-8") as f:
+            with open(self.root_path / 'auxdb_self_recovered.temp', encoding="utf-8") as f:
                 self.auxIDfix = json.load(f)
         except Exception as e:
             self.auxIDfix = {}
@@ -451,13 +453,3 @@ class LSXconvert():
         if verbose:
             print(f'{Fore.GREEN}[info] Converted {os.path.basename(self.file)} (Converted to LSF){Fore.RESET}')
         return True
-
-# Convert every lsx file in dir
-if __name__ == "__main__":
-    conv = LSXconvert()
-    for file in Path('.').rglob('*.lsx'):
-        try:
-            conv.convert(str(file))
-            print(f'Converted {file}')
-        except Exception as e:
-            print(f'Failed to convert {file}:\n\t{e}')
