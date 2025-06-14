@@ -453,14 +453,3 @@ class LSXconvert():
         if verbose:
             print(f'{Fore.GREEN}[info] Converted {os.path.basename(self.file)} (Converted to LSF){Fore.RESET}')
         return True
-
-# TODO: can this be removed?  not sure if it fully works
-# Convert every lsx file in dir
-if __name__ == "__main__":
-    conv = LSXconvert()
-    for file in Path('.').rglob('*.lsx'):
-        try:
-            conv.convert(str(file))
-            print(f'Converted {file}')
-        except Exception as e:
-            print(f'Failed to convert {file}:\n\t{e}')

@@ -82,6 +82,7 @@ class ProjectBuilder:
 
                 # Series of steps to convert output directory string
                 output_file_dir = re.sub(r'^Public/.*?/', f'Public/{project_name}/', output_file_dir)
+                output_file_dir = re.sub(r'^Generated/Public/.*?/', f'Generated/Public/{project_name}/', output_file_dir)
                 output_file_dir = re.sub(r'^Mods/.*?/', f'Mods/{project_name}/', output_file_dir)
 
                 # Change destination if table, stats, or mei file
@@ -95,8 +96,8 @@ class ProjectBuilder:
                     output_file_dir = output_file_dir.replace('Generated/', f'Generated/Public/{project_name}/')
 
                 # Fix localization
-                if '/Localization/' in output_file_dir and not f'Mods/{project_name}/Localization/' in output_file_dir:
-                    output_file_dir = output_file_dir.replace('/Localization/', f'Mods/{project_name}/Localization/')
+                if output_file_dir.startswith('Localization/'):
+                    output_file_dir = output_file_dir.replace('Localization/', f'Mods/{project_name}/Localization/')
 
                 new_output_path = project_output_path.joinpath(output_file_dir)
                 new_output_path.mkdir(parents=True, exist_ok=True)
