@@ -1,11 +1,12 @@
 import json
 import os
-import sys
 import uuid
 from pathlib import Path
 
 import xmltodict
 from colorama import Fore
+
+from helpers.LSLibUtil import LSLibUtil
 
 
 def map_modifier_type(attribute_type: str) -> str:
@@ -22,13 +23,13 @@ def map_modifier_type(attribute_type: str) -> str:
         return attribute_type
 
 
-class LSXconvert():
+class LSXconvert:
     data = None
     file = None
     uuid = None
     db = None
     auxIDfix = None
-    lslib_path = None
+    lslib_util: LSLibUtil = None
     root_path = None
 
     lsf_types = ['Templates', 'SkeletonBank', 'MaterialBank', 'TextureBank', 'VisualBank', 'EffectBank', 'Tags',
@@ -40,11 +41,11 @@ class LSXconvert():
     lastName = ''
 
     # Init
-    def __init__(self, db = None, lslib_path = None, root_path: Path = None):
+    def __init__(self, db = None, lslib_util: LSLibUtil = None, root_path: Path = None):
         self.file_type = None
         self.db = db
-        self.lslib_path = lslib_path
         self.root_path = root_path
+        self.lslib_util = lslib_util
 
     def setUUID(self, uuid = None):
         self.uuid = uuid
@@ -410,27 +411,6 @@ class LSXconvert():
         if file is None:
             file = self.file
 
-        divine = Path(self.lslib_path)
-        lslib_dll = divine.is_dir() and divine.joinpath("LSLib.dll") or divine.parent.joinpath("LSLib.dll")
-
-        if not lslib_dll.exists():
-            if verbose:
-                print(f'{Fore.RED}[lsf] Cant convert {os.path.basename(file)} (LSLib not found){Fore.RESET}')
-            return False
-
-        # Setting up lslib dll for use
-        import pythonnet
-        pythonnet.load('coreclr')
-        import clr
-        if not str(lslib_dll.parent.absolute()) in sys.path:
-            sys.path.append(str(lslib_dll.parent.absolute()))
-        clr.AddReference("LSLib")  # type: ignore
-        from LSLib.LS import ResourceUtils, ResourceConversionParameters, ResourceLoadParameters  # type: ignore
-        from LSLib.LS.Enums import Game  # type: ignore
-
-        load_params = ResourceLoadParameters.FromGameVersion(Game.BaldursGate3)
-        conversion_params = ResourceConversionParameters.FromGameVersion(Game.BaldursGate3)
-
         file_path = Path(file)
         trimmed_file_path = file_path
         # Due to unpacking some files get multiple suffix, so trim duplicates
@@ -443,12 +423,7 @@ class LSXconvert():
         if output.exists():
             os.remove(output)
 
-        input_str = str(file_path.absolute())
-        output_str = str(output.absolute())
-        
-        out_format = ResourceUtils.ExtensionToResourceFormat(output_str)
-        resource = ResourceUtils.LoadResource(input_str, load_params)
-        ResourceUtils.SaveResource(resource, output_str, out_format, conversion_params)
+        self.lslib_util.convert_file(file_path, output)
 
         if verbose:
             print(f'{Fore.GREEN}[info] Converted {os.path.basename(self.file)} (Converted to LSF){Fore.RESET}')

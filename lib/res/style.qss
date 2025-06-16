@@ -1,0 +1,32 @@
+Window {
+    min-width: 800px;
+    min-height: 600px;
+}
+
+.default {
+    max-height: 30px;
+    height: 30px;
+}
+
+.source {
+    width: 500px;
+    min-height: 100px;
+    border: 3px;
+    border-color: "yellow";
+    border-style: solid;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.output {
+}
+
+.hint_label {
+    font-size: 20px;
+    margin-top: 10px;
+
+}
+
+QPushButton#convert_button {
+    width: 100px;
+}

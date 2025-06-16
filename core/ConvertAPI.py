@@ -1,15 +1,14 @@
 import json
-import sys
 from pathlib import Path
 
 from colorama import Fore
 
-from helpers.LSXtoTBL import LSXconvert
-from helpers.Stats2kit import StatsConvert
 from helpers.CompileDB import CompileDB
 from helpers.FixLocale import FixLocale
+from helpers.LSLibUtil import LSLibUtil
+from helpers.LSXtoTBL import LSXconvert
 from helpers.ProjectBuilder import ProjectBuilder
-
+from helpers.Stats2kit import StatsConvert
 
 EXCLUSIONS = ['meta.lsx', 'metadata.lsf.lsx']
 FORCE_FAIL = ['SpellSet.txt']
@@ -21,18 +20,16 @@ class ConvertAPI:
                  src_bg3_path: str,
                  path_to_root: Path,
                  path_to_templates: Path,
-                 path_to_lslib: Path,
+                 lslib_util: LSLibUtil,
                  compile_aux_db: bool = False):
         self.path_to_root = path_to_root
+        self.lslib_util = lslib_util
         self._aux_db = self._get_auxiliary_db(src_bg3_path, compile_aux_db)
         self._db = self._get_db()
         self._stats_converter = StatsConvert(self._db, self._aux_db, self.path_to_root)
-        self._lsx_converter = LSXconvert(self._db, path_to_lslib, self.path_to_root)
+        self._lsx_converter = LSXconvert(self._db, self.lslib_util, self.path_to_root)
         self._locale_fixer = FixLocale()
-        self._proj_builder = ProjectBuilder(path_to_templates, path_to_lslib)
-        divine = Path(path_to_lslib)
-        self._lslib_dll = divine.is_dir() and divine.joinpath("LSLib.dll") or divine.parent.joinpath("LSLib.dll")
-
+        self._proj_builder = ProjectBuilder(path_to_templates, self._lsx_converter)
 
     #region Public functions
     def convert(self, source_path: Path, output_dir: Path, is_cli: bool = True):
@@ -47,8 +44,6 @@ class ConvertAPI:
         :param output_dir: Location to output converted files
         :param is_cli: Flag to indicate if caller is command line or GUI
         """
-        # TODO: source could be loose file(s), project, or pak
-
         self.convert_stat_files(source_path)
         self.convert_lsx_files(source_path)
         self.fix_locales(source_path)
@@ -65,17 +60,26 @@ class ConvertAPI:
         return True
 
     def is_valid_source(self, source_path: Path) -> bool:
-        #TODO: need to check for loose files, project, or pak file
-        return False
+        return (source_path is not None
+                and source_path.exists()
+                and (source_path.is_dir() or self.is_pak(source_path)))
 
-    def is_pak(self, source_path: Path) -> bool:
-        #TODO: Need to decide how to determine if location is a pak file/contains pak file
-        return False
+    @staticmethod
+    def is_pak(source_path: Path) -> bool:
+        return (source_path is not None
+                and source_path.exists()
+                and source_path.suffix == '.pak')
 
-    def unpack_file(self, source_path: Path) -> Path:
-        #TODO: How to handle out dir?  generated temp location returned to caller?
-        # self._unpack_internal(source_path, self.path_to_root / 'tmp')
-        return self.path_to_root / 'tmp'
+    def unpack_file(self, source_path: Path, output_path: Path):
+        if not self.is_pak(source_path):
+            print(f'{Fore.RED}[pak] Can\'t unpack {str(source_path)} (Not valid Pak file){Fore.RESET}')
+            return
+
+        if output_path is None or not output_path.is_dir():
+            print(f'{Fore.RED}[pak] Can\'t unpack output to {str(output_path)} (Not valid dir){Fore.RESET}')
+            return
+
+        self._unpack_internal(source_path, output_path)
 
     def convert_stat_files(self, source_path: Path):
         print(f'{Fore.CYAN}[main] Converting Stats files:{Fore.RESET}')
@@ -109,6 +113,10 @@ class ConvertAPI:
     def build_tk_project(self, source_path: Path, output_dir: Path, is_cli: bool = True):
         print(f'{Fore.CYAN}[main] Checking to construct tk project:{Fore.RESET}')
         projects = []
+
+        if source_path is None or not source_path.is_dir():
+            print(f'{Fore.YELLOW}[info] Skipping construct tk project: {source_path} (Reason: Not a valid project dir){Fore.RESET}')
+            return
 
         for dir_path in source_path.iterdir():
             if dir_path.is_dir() and not dir_path in projects and self.is_project_dir(dir_path):
@@ -163,23 +171,24 @@ class ConvertAPI:
         return None
 
     def _unpack_internal(self, source_file: Path, output_path: Path, verbose=True):
-        if not self._lslib_dll.exists():
-            if verbose:
-                print(f'{Fore.RED}[lsf] Cant convert {source_file.name} (LSLib not found){Fore.RESET}')
+        # unpack file
+        self.lslib_util.uncompress_package(source_file, output_path)
 
-        # Setting up lslib dll for use
-        import pythonnet
-        pythonnet.load('coreclr')
-        import clr
-        if not str(self._lslib_dll.parent.absolute()) in sys.path:
-            sys.path.append(str(self._lslib_dll.parent.absolute()))
+        # convert binaries to lsx, loca to xml
+        file_list = [f for f in output_path.resolve().glob('**/*') if f.is_file()]
+        for file in file_list:
+            converted = False
+            resolved_file = file.resolve()
+            if self.lslib_util.is_lsx_family(resolved_file.suffix):
+                self.lslib_util.convert_file(resolved_file, resolved_file.with_suffix(resolved_file.suffix + '.lsx'))
+                converted = True
+            elif self.lslib_util.is_loca_type(resolved_file.suffix):
+                self.lslib_util.convert_loca_file(resolved_file, resolved_file.with_suffix(resolved_file.suffix + '.xml'))
+                converted = True
 
-        print(sys.path)
-        clr.AddReference("LSLib")  # type: ignore
-        from LSLib.LS import Packager  # type: ignore
-
-        packager = Packager()
-        packager.UncompressPackage(str(source_file), str(output_path.absolute()))
+            # if converted type, remove original file
+            if converted:
+                file.unlink(True)
 
         if verbose:
             print(f'{Fore.GREEN}[info] Unpacked {source_file.name} (Out dir) {str(output_path)}{Fore.RESET}')

@@ -11,7 +11,6 @@ class ConvertCLI:
         self.convert_api = convert_api
         self.path_to_root = path_to_root
 
-
     def run(self):
         """
             Might have more logic in the future, for now this is hard-coded to run
