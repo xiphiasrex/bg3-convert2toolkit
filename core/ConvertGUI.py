@@ -35,10 +35,12 @@ class DragNDropQLabel(QLabel):
                  parent,
                  source_input: QLineEdit,
                  convert_api: ConvertAPI,
+                 allow_paks: bool,
                  *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.source_input = source_input
         self.convert_api = convert_api
+        self.allow_paks = allow_paks
         self.setAcceptDrops(True)
 
     def dragEnterEvent(self, event):
@@ -51,7 +53,7 @@ class DragNDropQLabel(QLabel):
         url = event.mimeData().urls()[0]
         drop_path = Path(url.toLocalFile())
 
-        if drop_path.is_dir() or self.convert_api.is_pak(drop_path):
+        if drop_path.is_dir() or (self.allow_paks and self.convert_api.is_pak(drop_path)):
             self.source_input.setText(str(drop_path.resolve()))
         else:
             self.source_input.setText(str(drop_path.parent.resolve()))
@@ -147,7 +149,8 @@ class ConverterUIWindow(QMainWindow):
         self.convert_container_widget = DragNDropQLabel(
             parent=self,
             source_input=self.source_text_input,
-            convert_api=self.convert_api
+            convert_api=self.convert_api,
+            allow_paks=True
         )
         self.convert_container_widget.setLayout(self.convert_container)
         self.convert_container_widget.setProperty(STYLE_CLASS, class_str(CONVERT_SOURCE_STYLE))
@@ -159,7 +162,8 @@ class ConverterUIWindow(QMainWindow):
         self.output_container_widget = DragNDropQLabel(
             parent=self,
             source_input=self.output_text_input,
-            convert_api=self.convert_api
+            convert_api=self.convert_api,
+            allow_paks=False
         )
         self.output_container_widget.setLayout(self.output_container)
         self.output_container_widget.setProperty(STYLE_CLASS, class_str(OUTPUT_STYLE, CONVERT_SOURCE_STYLE))
