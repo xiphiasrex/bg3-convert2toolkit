@@ -5,8 +5,10 @@ from pathlib import Path
 
 from PyQt6.QtCore import Qt, QTimer, QThread, pyqtSlot
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QMainWindow, QLineEdit, QVBoxLayout
 from PyQt6.QtWidgets import (
+    QMainWindow,
+    QLineEdit,
+    QVBoxLayout,
     QPushButton,
     QWidget,
     QLabel,
