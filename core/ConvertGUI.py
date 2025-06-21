@@ -24,23 +24,48 @@ DEFAULT_STYLE = "default"
 CONVERT_SOURCE_STYLE = "source"
 OUTPUT_STYLE = "output"
 HINT_LABEL = "hint_label"
+INVALID_STYLE = "invalid"
+HIGHLIGHT_STYLE = "highlight"
 
 
-def class_str(*args) -> str:
-    return ' '.join(args)
+def add_classes(element: QWidget, *args):
+    current_classes_prop = element.property(STYLE_CLASS)
+    if current_classes_prop is not None:
+        current_classes: list[str] = str(element.property(STYLE_CLASS)).split(' ')
+    else:
+        current_classes = []
+    for arg in args:
+        if not arg in current_classes:
+            current_classes.append(arg)
+    element.setProperty(STYLE_CLASS, ' '.join(current_classes))
+    style_sheet = element.styleSheet()
+    element.setStyleSheet(" ")
+    element.setStyleSheet(style_sheet)
+
+def remove_classes(element: QWidget, *args):
+    current_classes_prop = element.property(STYLE_CLASS)
+    if current_classes_prop is not None:
+        current_classes: list[str] = str(element.property(STYLE_CLASS)).split(' ')
+        for arg in args:
+            if arg in current_classes:
+                current_classes.remove(arg)
+        element.setProperty(STYLE_CLASS, ' '.join(current_classes))
+        style_sheet = element.styleSheet()
+        element.setStyleSheet(" ")
+        element.setStyleSheet(style_sheet)
 
 
 # custom input to support drag-n-drop
 class DragNDropQLabel(QLabel):
-    source_input = None
+    text_input = None
     def __init__(self,
                  parent,
-                 source_input: QLineEdit,
+                 text_input: QLineEdit,
                  convert_api: ConvertAPI,
                  allow_paks: bool,
                  *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
-        self.source_input = source_input
+        self.text_input = text_input
         self.convert_api = convert_api
         self.allow_paks = allow_paks
         self.setAcceptDrops(True)
@@ -48,17 +73,22 @@ class DragNDropQLabel(QLabel):
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
             event.accept()
+            add_classes(self, HIGHLIGHT_STYLE)
         else:
             event.ignore()
 
+    def dragLeaveEvent(self, event):
+        remove_classes(self, HIGHLIGHT_STYLE)
+
     def dropEvent(self, event):
+        remove_classes(self, HIGHLIGHT_STYLE)
         url = event.mimeData().urls()[0]
         drop_path = Path(url.toLocalFile())
 
         if drop_path.is_dir() or (self.allow_paks and self.convert_api.is_pak(drop_path)):
-            self.source_input.setText(str(drop_path.resolve()))
+            self.text_input.setText(str(drop_path.resolve()))
         else:
-            self.source_input.setText(str(drop_path.parent.resolve()))
+            self.text_input.setText(str(drop_path.parent.resolve()))
 
 
 # thread object to support converting
@@ -87,6 +117,32 @@ class ConvertQThread(QThread):
             self.convert_api.convert(source_path, output_path, False)
 
 
+# timer used for delay before validating source/output fields
+class DebounceQTimer(QTimer):
+    def __init__(self,
+                 timeout_function):
+        super().__init__()
+        self.setInterval(300)
+        self.setSingleShot(True)
+        # noinspection PyUnresolvedReferences
+        self.timeout.connect(timeout_function)
+
+
+# custom text inputs for file paths
+class PathQLineEdit(QLineEdit):
+    def __init__(self,
+                 disable_function,
+                 timeout_function):
+        super().__init__()
+        # Timer to give slight pause before checking path
+        self.source_debounce = DebounceQTimer(timeout_function)
+        add_classes(self, DEFAULT_STYLE)
+        # noinspection PyUnresolvedReferences
+        self.textChanged.connect(self.source_debounce.start)
+        # noinspection PyUnresolvedReferences
+        self.textChanged.connect(disable_function)
+
+
 # top level UI pyqt6 object
 class ConverterUIWindow(QMainWindow):
     def __init__(self,
@@ -100,32 +156,23 @@ class ConverterUIWindow(QMainWindow):
         # main window's name and size:
         self.setWindowTitle("Eclip5e™ Convert2Toolkit")
         self.setWindowIcon(QIcon(str(path_to_resources / 'convert.ico')))
-        self.setGeometry(300, 300, 800, 600)
-        self.setMinimumSize(800, 600)
-
-        # Timer to give slight pause before checking path
-        self.debounce = QTimer()
-        self.debounce.setInterval(500)
-        self.debounce.setSingleShot(True)
-        # noinspection PyUnresolvedReferences
-        self.debounce.timeout.connect(self.check_path)
+        self.setGeometry(300, 300, 800, 440)
 
         # text input for source path
-        self.source_text_input = QLineEdit(self)
-        self.source_text_input.setProperty(STYLE_CLASS, class_str(DEFAULT_STYLE))
-        # noinspection PyUnresolvedReferences
-        self.source_text_input.textChanged.connect(self.debounce.start)
-        # noinspection PyUnresolvedReferences
-        self.source_text_input.textChanged.connect(self.disable_convert_button)
+        self.source_text_input = PathQLineEdit(
+            disable_function=self.disable_convert_button,
+            timeout_function=self.validate_paths
+        )
 
         # text input for output path
-        self.output_text_input = QLineEdit(self)
-        self.output_text_input.setText(str(default_output_path.resolve()))
-        self.output_text_input.setProperty(STYLE_CLASS, class_str(DEFAULT_STYLE))
+        self.output_text_input = PathQLineEdit(
+            disable_function=self.disable_convert_button,
+            timeout_function=self.validate_paths
+        )
 
         # main convert button
         self.convert_button = QPushButton("Convert")
-        self.convert_button.setProperty(STYLE_CLASS, class_str(DEFAULT_STYLE))
+        add_classes(self.convert_button, DEFAULT_STYLE)
         self.convert_button.setObjectName("convert_button")
         self.convert_button.setToolTip("Provide valid path for converting")
         # noinspection PyUnresolvedReferences
@@ -147,15 +194,14 @@ class ConverterUIWindow(QMainWindow):
         self.convert_container = QHBoxLayout()
         self.convert_container.setAlignment(Qt.AlignmentFlag.AlignVCenter)
         self.convert_container.addWidget(self.source_text_input)
-        self.convert_container.addWidget(self.convert_button)
         self.convert_container_widget = DragNDropQLabel(
             parent=self,
-            source_input=self.source_text_input,
+            text_input=self.source_text_input,
             convert_api=self.convert_api,
             allow_paks=True
         )
         self.convert_container_widget.setLayout(self.convert_container)
-        self.convert_container_widget.setProperty(STYLE_CLASS, class_str(CONVERT_SOURCE_STYLE))
+        add_classes(self.convert_container_widget, CONVERT_SOURCE_STYLE)
 
         # ui group for output path
         self.output_container = QHBoxLayout()
@@ -163,20 +209,20 @@ class ConverterUIWindow(QMainWindow):
         self.output_container.addWidget(self.output_text_input)
         self.output_container_widget = DragNDropQLabel(
             parent=self,
-            source_input=self.output_text_input,
+            text_input=self.output_text_input,
             convert_api=self.convert_api,
             allow_paks=False
         )
         self.output_container_widget.setLayout(self.output_container)
-        self.output_container_widget.setProperty(STYLE_CLASS, class_str(OUTPUT_STYLE, CONVERT_SOURCE_STYLE))
+        add_classes(self.output_container_widget, OUTPUT_STYLE, CONVERT_SOURCE_STYLE)
 
         # hint label for user on input
-        self.convert_info_label = QLabel("Drop file/directory or enter path to convert")
-        self.convert_info_label.setProperty(STYLE_CLASS, class_str(DEFAULT_STYLE, HINT_LABEL))
+        self.convert_info_label = QLabel("Drop pak file/directory or enter path to convert")
+        add_classes(self.convert_info_label, DEFAULT_STYLE, HINT_LABEL)
 
         # hint label for user on output
-        self.output_info_label = QLabel("Drop directory or enter output path")
-        self.output_info_label.setProperty(STYLE_CLASS, class_str(DEFAULT_STYLE, HINT_LABEL))
+        self.output_info_label = QLabel("Drop directory or enter path for output")
+        add_classes(self.output_info_label, DEFAULT_STYLE, HINT_LABEL)
 
         # setup main container for window
         self.main_container = QVBoxLayout()
@@ -185,6 +231,7 @@ class ConverterUIWindow(QMainWindow):
         self.main_container.addWidget(self.convert_container_widget)
         self.main_container.addWidget(self.output_info_label)
         self.main_container.addWidget(self.output_container_widget)
+        self.main_container.addWidget(self.convert_button)
 
         # assemble central widget
         self.widget = QWidget()
@@ -194,13 +241,33 @@ class ConverterUIWindow(QMainWindow):
         # this is done late to detect change
         if not default_source_path is None:
             self.source_text_input.setText(str(default_source_path.resolve()))
+        if not default_output_path is None:
+            self.output_text_input.setText(str(default_output_path.resolve()))
 
-    def check_path(self):
-        if self.convert_api.is_valid_source(Path(self.source_text_input.text())):
+    def validate_paths(self):
+        valid_source = self.check_source_path()
+        valid_output = self.check_output_path()
+        if valid_source and valid_output:
             self.enable_convert_button(True)
+
+    def check_source_path(self) -> bool:
+        path_text = self.source_text_input.text()
+        if path_text and self.convert_api.is_valid_source(Path(path_text)):
+            remove_classes(self.convert_container_widget, INVALID_STYLE)
+            return True
         else:
-            # TODO: show a message/label to notify user that path is invalid?
-            pass
+            add_classes(self.convert_container_widget, INVALID_STYLE)
+            return False
+
+    def check_output_path(self) -> bool:
+        path_text = self.output_text_input.text()
+        output_path = Path(path_text)
+        if path_text and output_path.exists() and output_path.is_dir():
+            remove_classes(self.output_container_widget, INVALID_STYLE)
+            return True
+        else:
+            add_classes(self.output_container_widget, INVALID_STYLE)
+            return False
 
     def disable_convert_button(self):
         self.enable_convert_button(False)
@@ -211,7 +278,7 @@ class ConverterUIWindow(QMainWindow):
             self.convert_button.setToolTip("Convert Files")
         else:
             self.convert_button.setEnabled(False)
-            self.convert_button.setToolTip("Provide valid path for converting")
+            self.convert_button.setToolTip("Provide valid input & output path for converting")
 
     def run_convert(self):
         self.spinner.start()
