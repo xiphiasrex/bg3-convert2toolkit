@@ -13,8 +13,8 @@ class ProjectBuilder:
     path_to_templates = None
 
     # Init
-    def __init__(self, path_to_templates: Path, path_to_lslib: Path = None):
-        self.conv_lsx = LSXconvert(lslib_path=path_to_lslib)
+    def __init__(self, path_to_templates: Path, conv_lsx: LSXconvert = None):
+        self.conv_lsx = conv_lsx
         self.path_to_templates = path_to_templates
 
     # Check if path is a workspace resembling a project
@@ -139,7 +139,7 @@ class ProjectBuilder:
             # File Cleanup
             #TODO remove duplicate files, conversion leftovers or localization files
 
-            print(f'{Fore.GREEN}[Project] Project {project_root_name} successfully created{Fore.RESET}')
+            print(f'{Fore.GREEN}[Project] Project {project_name} successfully created{Fore.RESET}')
             #raise Exception('Cleanup')
             return True
         except Exception as e:

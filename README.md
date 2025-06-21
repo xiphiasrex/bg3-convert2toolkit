@@ -74,12 +74,24 @@ Expected file names (note not all types may be supported currently)
 ├── TreasureTable.txt
 ```
 
+
 ---
 ## Settings
 - `bg3path`
   - Path to BG3 installation
 - `compileAux`
   - 0 or 1 to compile additional UUIDs from Editor projects<br>(recommended to set to 0 after running the first time or when needing to recompile)
+- `cliMode`
+  - true or false to run in cli mode or start gui 
+
+
+---
+## GUI
+- Actual conversion logic is the same as CLI mode
+- Supports providing a source path and output path
+- Source path must be a directory or pak file
+  - Does not support converting multiple pak files at once
+- Output path must be a directory
 
 
 ---
@@ -115,9 +127,9 @@ run `py Convert2Toolkit.py` to start conversion.
 
 - [X] Add conversion for Rulebooks.lsx
 
-- [ ] Add support for direct conversion of pak files
+- [X] Add support for direct conversion of pak files
 
-- [ ] Add GUI version of converter
+- [X] Add GUI version of converter
 
 
 ---
