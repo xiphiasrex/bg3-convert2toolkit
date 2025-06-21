@@ -182,9 +182,9 @@ class ConverterUIWindow(QMainWindow):
         # loading spinner for convert button
         spin_pars = SpinnerParameters(
             disable_parent_when_spinning=True,
-            inner_radius=4,
-            line_length=10,
-            line_width=2,
+            inner_radius=6,
+            line_length=12,
+            line_width=3,
             number_of_lines=12,
             trail_fade_percentage=80
         )
