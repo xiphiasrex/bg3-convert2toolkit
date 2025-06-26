@@ -1,3 +1,4 @@
+import argparse
 import json
 from pathlib import Path
 
@@ -14,6 +15,28 @@ if __name__ == "__main__":
 		bg3path = settings.get('bg3path', '')
 		compileAux = settings.get('compileAux', 1)
 		cli_mode = settings.get('cliMode', True)
+
+	# Handle command line args
+	parser = argparse.ArgumentParser(
+		prog='Convert2Toolkit',
+		description="Used to convert generated Baldur's Gate 3 mod data files into Toolkit versions",
+	)
+	group = parser.add_mutually_exclusive_group()
+	group.add_argument(
+		'--cli',
+		action='store_true',
+		help='force cli mode (overrides settings.json). cannot be used with --gui'
+	)
+	group.add_argument(
+		'--gui',
+		action='store_true',
+		help='force gui mode (overrides settings.json). cannot be used with --cli'
+	)
+	args = vars(parser.parse_args())
+	if args['cli']:
+		cli_mode = True
+	elif args['gui']:
+		cli_mode = False
 
 	# Set up paths for file references (needed due to exe packing)
 	path_to_root = Path('.').resolve()
