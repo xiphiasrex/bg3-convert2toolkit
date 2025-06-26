@@ -3,12 +3,12 @@ from pathlib import Path
 
 from colorama import Fore
 
-from helpers.CompileDB import CompileDB
-from helpers.FixLocale import FixLocale
 from helpers.LSLibUtil import LSLibUtil
 from helpers.LSXtoTBL import LSXconvert
 from helpers.ProjectBuilder import ProjectBuilder
 from helpers.Stats2kit import StatsConvert
+from helpers.compiledb import CompileDB
+from helpers.fixlocale import FixLocale
 
 EXCLUSIONS = ['meta.lsx', 'metadata.lsf.lsx']
 FORCE_FAIL = ['SpellSet.txt']
