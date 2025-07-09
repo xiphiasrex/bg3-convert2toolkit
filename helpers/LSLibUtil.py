@@ -18,6 +18,7 @@ class LSLibUtil:
         if not str(self._lslib_dll.parent.absolute()) in sys.path:
             sys.path.append(str(self._lslib_dll.parent.absolute()))
 
+        # set up LSLib types for local use
         clr.AddReference("LSLib")  # type: ignore
         from LSLib.LS import LocaFormat, LocaUtils, Packager, ResourceUtils, ResourceConversionParameters, ResourceLoadParameters  # type: ignore
         from LSLib.LS.Enums import Game  # type: ignore
@@ -28,6 +29,14 @@ class LSLibUtil:
         self.resource_utils = ResourceUtils
         self.loca_utils = LocaUtils
         self.loca_format = LocaFormat
+
+        # setup System types for file conversion
+        clr.AddReference('System')  # type: ignore
+        from System.IO import File, FileStream, FileMode  # type: ignore
+
+        self.file = File
+        self.file_stream = FileStream
+        self.file_mode = FileMode
 
     def uncompress_package(self, source_file: Path, output_path: Path):
         if source_file is None or output_path is None:
@@ -46,9 +55,14 @@ class LSLibUtil:
         self.resource_utils.SaveResource(resource, output_str, out_format, self.conversion_params)
 
     def convert_loca_file(self, source_file: Path, output_path: Path):
-        with open(source_file, 'w', encoding="utf-8") as file:
+        file = None
+        try:
+            file = self.file.Open(str(source_file.resolve()), self.file_mode.Open)
             resource = self.loca_utils.Load(file, self.loca_format.Loca)
             self.loca_utils.Save(resource, str(output_path.resolve()), self.loca_format.Xml)
+        finally:
+            if file is not None:
+                file.Close()
 
     @staticmethod
     def is_lsx_family(suffix: str):
